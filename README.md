@@ -66,3 +66,11 @@ erDiagram
         string Message
         string WorkFlow
     }
+```
+---
+
+## 🔒 Sécurité & Idempotence
+
+* **Unicité :** Clé composite `email_idAtelier` calculée avant toute écriture.
+* **Annulation dynamique :** Altération de la clé sous la forme `email_idAtelier_timestamp` pour autoriser une réinscription ultérieure.
+* **Audit :** Journalisation de chaque transition d'état dans la table `Logs`.
