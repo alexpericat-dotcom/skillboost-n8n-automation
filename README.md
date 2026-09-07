@@ -6,7 +6,7 @@ Solution d'automatisation no-code / low-code pour la gestion de bout en bout des
 
 ## 🛠️ Stack Technique
 
-* **Moteur d'orchestration :** n8n (Community Edition)
+* **Moteur d'orchestration :** n8n (Community Edition) VPS
 * **Base de données relationnelle :** Baserow Cloud
 * **Interfaces & Canaux :** Telegram Bot API (`@SkillBoost_Admin_Bot`), Gmail API
 * **Résilience & Failover :** Gestionnaire d'erreurs global (alertes hors-bande OVH SMS)
