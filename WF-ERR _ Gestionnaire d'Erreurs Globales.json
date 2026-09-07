@@ -1,0 +1,107 @@
+{
+  "name": "WF-ERR : Gestionnaire d'Erreurs Globales",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# WF-ERR : Gestionnaire d'Erreurs Globales [FAIL-SAFE]\n\n### 🎯 Objectif\nAgir comme un filet de sécurité ultime (failover) pour intercepter les erreurs fatales non interceptées des workflows principaux (panne base de données, timeout réseau) et alerter l'administrateur hors-bande.\n\n### ⚙️ Processus\n* **Interception Native :** Déclenchement automatique par le moteur n8n lorsqu'un workflow lié rencontre une erreur bloquante (`[IN]`).\n* **Extraction & Diagnostic :** Capture des métadonnées de l'incident (nom du workflow source, nœud en échec, message d'erreur d'exécution et horodatage) (`[EXEC]`).\n* **Alerte Hors-Bande (Secours) :** Préparation et routage d'une alerte SMS critique via l'API OVHcloud garantissant la notification même en cas d'indisponibilité de Telegram ou du serveur de messagerie (`[SMS]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Déclencheur natif d'incident système (Error Trigger)\n* `[EXEC]` : Formatage JavaScript et isolation des traces d'erreurs\n* `[SMS]` : Notification d'urgence externe (Canal hors-bande - Désactivé hors prod)",
+        "height": 512,
+        "width": 992,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -112,
+        -544
+      ],
+      "typeVersion": 1,
+      "id": "71c4d2fa-4e62-40c0-a3ee-75666fa5c064",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {},
+      "id": "2d2e2107-d1e6-44fe-9853-f860c3bc5f4c",
+      "name": "[IN] Déclencheur d'Erreur Globale",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const errorData = $input.item.json;\n\nreturn {\n  json: {\n    sujet: `🚨 ALERTE CRITIQUE : Panne sur ${errorData.workflow.name}`,\n    workflow_nom: errorData.workflow.name,\n    workflow_id: errorData.workflow.id,\n    execution_id: errorData.execution.id,\n    message_erreur: errorData.execution.error.message || 'Erreur inconnue',\n    horodatage: new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })\n  }\n};"
+      },
+      "id": "eafbcaa7-60fb-4b66-8682-680c7ab545e4",
+      "name": "[EXEC] Formater Rapport d'Incident",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://eu.api.ovh.com/1.0/sms/sms-xx12345-1/jobs",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"receivers\": [\"+33612345678\"],\n  \"message\": \"{{ $json.sujet }}\\n\\nHeure : {{ $json.horodatage }}\\nErreur : {{ $json.message_erreur }}\",\n  \"noStopClause\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "17f60580-3d7c-42b8-8605-22d31c47b5e2",
+      "name": "[SMS] Alerte Urgence OVHcloud",
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "[IN] Déclencheur d'Erreur Globale": {
+      "main": [
+        [
+          {
+            "node": "[EXEC] Formater Rapport d'Incident",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[EXEC] Formater Rapport d'Incident": {
+      "main": [
+        [
+          {
+            "node": "[SMS] Alerte Urgence OVHcloud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "34912d79-9971-44e7-ab66-a5c691c370ed",
+  "meta": {
+    "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"
+  },
+  "id": "HS1MOpVRiMoZPgNj",
+  "tags": [
+    {
+      "updatedAt": "2026-09-03T17:35:03.709Z",
+      "createdAt": "2026-09-03T17:35:03.709Z",
+      "id": "RhBGnG8XMyHLAazJ",
+      "name": "[FAIL-SAFE]"
+    }
+  ]
+}

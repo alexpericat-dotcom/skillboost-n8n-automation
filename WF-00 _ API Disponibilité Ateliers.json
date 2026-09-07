@@ -1,0 +1,143 @@
+{
+  "name": "WF-00 : API Disponibilité Ateliers",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# WF-00 : API Disponibilité Ateliers [API]\n\n### 🎯 Objectif\nExposer l'état de remplissage des ateliers en temps réel et de manière sécurisée afin d'alimenter dynamiquement les options du formulaire d'inscription HTML.\n\n### ⚙️ Processus\n* **Flux GET (Vérification des disponibilités) :**\n  * Réception de la requête HTTP envoyée par le front-end du formulaire (`[IN]`).\n  * Extraction du catalogue complet des ateliers, capacités max et quotas depuis Baserow (`[DB]`).\n  * Calcul JavaScript du ratio et du drapeau de complétion (`complet: true/false`) (`[EXEC]`).\n  * Restitution HTTP synchrone du payload JSON nettoyé au navigateur (`[OUT]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Point d'entrée déclencheur (Webhook GET)\n* `[DB]` : Interrogation et lecture du catalogue Baserow\n* `[EXEC]` : Logique JavaScript et calcul des jauges\n* `[OUT]` : Restitution de la réponse HTTP synchrone",
+        "height": 460,
+        "width": 780,
+        "color": 6
+      },
+      "id": "c61faec6-e884-4113-94e4-1f6519eca0b5",
+      "name": "Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "path": "api/ateliers/dispo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "de5046c2-6d6e-416b-9d4a-8d14d16358a5",
+      "name": "[IN] Webhook (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        368
+      ],
+      "webhookId": "939a8dd8-2b44-4e2f-8f2b-61b1150dd308"
+    },
+    {
+      "parameters": {
+        "jsCode": "// On nettoie et on formatte les données pour le formulaire\nreturn $input.all().map(item => {\n  const row = item.json;\n  \n  // ⚠️ Remplace par le nom EXACT de tes colonnes dans Baserow\n  const capacite = row['Capacité Max'] || 0;\n  const inscrits = row['Inscrits Confirmés'] || 0;\n  \n  // Calcul du statut complet (true ou false)\n  const isComplet = inscrits >= capacite;\n  \n  return {\n    json: {\n      id_atelier: row['ID_Atelier'],\n      nom: row[\"Nom de l'atelier\"],\n      complet: isComplet\n    }\n  };\n});"
+      },
+      "id": "cc12741f-0541-4bb8-aba7-778474c080c0",
+      "name": "[EXEC] Formater Statut",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "2cd0587e-40bb-4142-9b76-9f8c1b0b8ea4",
+      "name": "[OUT] Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        656,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "tableId": 1168028,
+        "returnAll": true,
+        "additionalOptions": {}
+      },
+      "id": "50ed02c6-4b6d-47a0-9379-ee4496b21825",
+      "name": "[DB] Lire Ateliers (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        208,
+        368
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      },
+      "notes": "À configurer : Choix Table Ateliers"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "[IN] Webhook (GET)": {
+      "main": [
+        [
+          {
+            "node": "[DB] Lire Ateliers (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[EXEC] Formater Statut": {
+      "main": [
+        [
+          {
+            "node": "[OUT] Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Lire Ateliers (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[EXEC] Formater Statut",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "de92d73e-9108-474e-9331-63ce5fe1fe6b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"
+  },
+  "id": "XpXFdHB5EG55JAFH",
+  "tags": [
+    {
+      "updatedAt": "2026-09-03T11:53:54.880Z",
+      "createdAt": "2026-09-03T11:53:54.880Z",
+      "id": "tDwL3vtPe5z5hi7w",
+      "name": "[API]"
+    }
+  ]
+}

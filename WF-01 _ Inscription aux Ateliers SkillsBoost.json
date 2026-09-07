@@ -1,0 +1,252 @@
+{
+  "name": "WF-01 : Inscription aux Ateliers SkillsBoost",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# WF-01 : Inscription aux Ateliers SkillsBoost [CORE]\n\n### 🎯 Objectif\nGérer l'affichage dynamique du formulaire d'inscription, réceptionner les soumissions utilisateur de manière asynchrone et optimiser l'expérience de navigation (TTFB minimal).\n\n### ⚙️ Processus\n* **Flux GET (Consultation) :**\n  * Réception de la requête HTTP du navigateur (`[IN]`).\n  * Extraction du catalogue des ateliers actifs depuis Baserow (`[DB]`).\n  * Injection des données dans le template HTML via JavaScript (`[EXEC]`).\n  * Rendu synchrone de l'interface d'inscription (`[OUT]`).\n* **Flux POST (Soumission) :**\n  * Réception des données du formulaire (e-mail, choix atelier) via Webhook POST (`[IN]`).\n  * Restitution HTTP immédiate d'un écran de confirmation synchrone (`[OUT]`).\n  * Déclenchement asynchrone du sous-workflow de traitement métier WF-02 (`[WF]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Points d'entrée déclencheurs (Webhooks GET & POST)\n* `[DB]` : Lecture du catalogue d'ateliers\n* `[EXEC]` : Logique JavaScript et construction du DOM HTML\n* `[OUT]` : Réponses HTTP synchrones renvoyées au client\n* `[WF]` : Exécution asynchrone de sous-workflows de traitement",
+        "height": 516,
+        "width": 1472,
+        "color": 4
+      },
+      "id": "a3a53096-3634-458d-bebf-98115de9c5b7",
+      "name": "Note WF-01",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "path": "formulaire-inscription",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "95dd6963-a972-4744-a021-cdb4a3683de7",
+      "name": "[IN] Afficher Formulaire",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        112,
+        624
+      ],
+      "webhookId": "004f986d-f951-4ea4-89a3-2d0f77a4952f"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "formulaire-inscription",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "20586f03-30b8-44ac-8581-2b815b5226eb",
+      "name": "[IN] Recevoir Inscription",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        624
+      ],
+      "webhookId": "d7865aef-37eb-43fa-b116-38e768775f5b"
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "tableId": 1168028,
+        "additionalOptions": {}
+      },
+      "id": "b793d5e8-a23f-4ced-83c3-1049f4ba81ec",
+      "name": "[DB] Lire Ateliers (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        336,
+        624
+      ],
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ateliers = $input.all();\nlet optionsHTML = '';\n\nateliers.forEach(atelier => {\n  // On ignore la ligne si le nom de l'atelier est vide (évite le \"null\")\n  if (atelier.json['Nom de l\\'atelier']) {\n    \n    // Nettoyage de la date pour un affichage lisible\n    let dateBrute = atelier.json['Date et Heure'];\n    let dateFormatee = dateBrute;\n    try {\n      const d = new Date(dateBrute);\n      dateFormatee = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });\n    } catch(e) {}\n\n    optionsHTML += `<option value=\"${atelier.json.ID_Atelier}\">${atelier.json['Nom de l\\'atelier']} (${dateFormatee})</option>`;\n  }\n});\n\nconst html = `\n<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Inscription - SkillsBoost</title>\n    <style>\n        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 40px; }\n        .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }\n        .header { text-align: center; margin-bottom: 30px; }\n        .logo { font-size: 24px; font-weight: bold; color: #4f46e5; background: #e0e7ff; display: inline-block; padding: 8px 16px; border-radius: 50px; margin-bottom: 10px; }\n        h2 { color: #1f2937; margin: 0; font-size: 22px; }\n        label { font-weight: 600; color: #4b5563; display: block; margin-top: 20px; font-size: 14px; }\n        input, select { width: 100%; padding: 12px; margin-top: 8px; border-radius: 6px; border: 1px solid #d1d5db; box-sizing: border-box; font-size: 14px; }\n        input:focus, select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }\n        button { width: 100%; background-color: #4f46e5; color: white; padding: 14px; border: none; border-radius: 6px; margin-top: 30px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.2s; }\n        button:hover { background-color: #4338ca; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <div class=\"logo\">🚀 SkillsBoost</div>\n            <h2>Réservation d'Atelier</h2>\n        </div>\n        <form action=\"https://vps-308cfbf7.vps.ovh.net/webhook/formulaire-inscription\" method=\"POST\">\n            <label for=\"email\">Votre Adresse Email :</label>\n            <input type=\"email\" id=\"email\" name=\"email\" required placeholder=\"nom@exemple.com\">\n            \n            <label for=\"atelier\">Choisissez un atelier :</label>\n            <select id=\"atelier\" name=\"atelier\" required>\n                <option value=\"\">-- Sélectionnez un créneau --</option>\n                ${optionsHTML}\n            </select>\n            \n            <button type=\"submit\">Confirmer mon inscription</button>\n        </form>\n    </div>\n\n    <script>\n      document.addEventListener(\"DOMContentLoaded\", function() {\n        fetch('https://vps-308cfbf7.vps.ovh.net/webhook/api/ateliers/dispo')\n          .then(response => response.json())\n          .then(ateliers => {\n            ateliers.forEach(atelier => {\n              let option = document.querySelector(\\`option[value=\"\\${atelier.id_atelier}\"]\\`);\n              if (option) {\n                if (atelier.complet === true) {\n                  option.innerText += \" ⚠️ (Sur liste d'attente)\";\n                } else {\n                  option.innerText += \" ✅ (Disponible)\";\n                }\n              }\n            });\n          })\n          .catch(error => console.error('Erreur API dispo :', error));\n      });\n    </script>\n</body>\n</html>\n`;\n\nreturn { json: { html: html } };"
+      },
+      "id": "48d2a4c4-8512-44c9-81b3-85a6fc530c03",
+      "name": "[EXEC] Générer HTML Dynamique",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "886a1fb8-561f-49ea-9f43-20d2ec1546a5",
+      "name": "[OUT] Afficher Page Web",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        784,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Demande reçue | SkillsBoost</title>\n  <style>\n    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; }\n    body { background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }\n    .card { background: #ffffff; border-radius: 12px; padding: 40px 30px; text-align: center; max-width: 480px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }\n    .icon { font-size: 48px; margin-bottom: 20px; }\n    h1 { color: #1e293b; font-size: 22px; margin-bottom: 12px; font-weight: 600; }\n    p { color: #64748b; font-size: 15px; line-height: 1.6; margin-bottom: 24px; }\n    .badge { display: inline-block; background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; margin-bottom: 20px; }\n    .btn { display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; transition: background 0.2s; }\n    .btn:hover { background: #1d4ed8; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"icon\">✅</div>\n    <span class=\"badge\">Demande enregistrée</span>\n    <h1>Merci pour votre demande !</h1>\n    <p>Votre demande pour l'atelier a bien été prise en compte. Un e-mail de confirmation détaillant votre statut vous a été envoyé.</p>\n    <a href=\"javascript:history.back()\" class=\"btn\">Retour au formulaire</a>\n  </div>\n</body>\n</html>",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "=text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1312,
+        848
+      ],
+      "id": "d841c5e1-618e-49d5-8b3e-eedede95781f",
+      "name": "[OUT] Afficher Page Succès Demande"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "OCrwpdAqcxmaH69k",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/OCrwpdAqcxmaH69k",
+          "cachedResultName": "WF-02 : Traitement Inscription DB"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1456,
+        624
+      ],
+      "id": "b12ff260-9172-453e-a841-82d23f5764ea",
+      "name": "[WF] Déclencher Traitement Métier (WF-02)",
+      "alwaysOutputData": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "[IN] Afficher Formulaire": {
+      "main": [
+        [
+          {
+            "node": "[DB] Lire Ateliers (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[IN] Recevoir Inscription": {
+      "main": [
+        [
+          {
+            "node": "[WF] Déclencher Traitement Métier (WF-02)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[OUT] Afficher Page Succès Demande",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Lire Ateliers (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[EXEC] Générer HTML Dynamique",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[EXEC] Générer HTML Dynamique": {
+      "main": [
+        [
+          {
+            "node": "[OUT] Afficher Page Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[OUT] Afficher Page Succès Demande": {
+      "main": [
+        []
+      ]
+    },
+    "[WF] Déclencher Traitement Métier (WF-02)": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "HS1MOpVRiMoZPgNj",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "fa6d0955-6b03-4e77-92d5-2ea27d13a5e2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"
+  },
+  "id": "y5qLEbKYzFOTNPHl",
+  "tags": [
+    {
+      "updatedAt": "2026-08-11T21:10:31.394Z",
+      "createdAt": "2026-08-11T21:10:31.394Z",
+      "id": "pM1halGNP2912wEm",
+      "name": "[CORE]"
+    }
+  ]
+}

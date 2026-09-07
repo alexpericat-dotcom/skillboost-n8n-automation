@@ -1,0 +1,778 @@
+{
+  "name": "WF-02 : Traitement Inscription DB",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# WF-02 : Traitement Inscription DB [CORE]\n\n### 🎯 Objectif\nExécuter l'intégralité de la logique métier d'inscription : garantie d'idempotence (anti-doublon), vérification dynamique des quotas d'ateliers et expédition des notifications multicanales.\n\n### ⚙️ Processus\n* **Dédoublonnage :** Normalisation de l'e-mail, génération de la clé unique (`email_atelier`) et vérification dans la table `Inscriptions`.\n* **Routage Doublon :** Si la clé existe déjà, envoi d'une notification dédiée et journalisation sans création de ligne.\n* **Contrôle des Quotas :** Si nouveau participant, lecture des capacités de l'atelier ciblé via Baserow.\n* **Branche Inscription Confirmée :** Création du participant, alerte Telegram au coordinateur, e-mail de validation Gmail et log d'audit.\n* **Branche Liste d'Attente (Waitlist) :** Si jauge atteinte, inscription en statut `Waitlist`, e-mail d'information et traçage dédié.\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Point d'entrée sous-workflow (Execute Workflow Trigger)\n* `[EXEC]` : Normalisation textuelle et dérivation de variables\n* `[DB]` : Lectures et écritures dans les tables métier Baserow\n* `[COND]` : Décisions logiques, aiguillages et filtrages\n* `[BOT]` : Alertes Telegram destinées à la coordination\n* `[MAIL]` : Notifications transactionnelles sortantes (Gmail)\n* `[LOG]` : Traçabilité et historique d'audit centralisé",
+        "height": 512,
+        "width": 1024,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        -64
+      ],
+      "id": "495a9119-cc23-4de5-aebe-97783c3d2c37",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -992,
+        688
+      ],
+      "id": "49475426-22f8-4aa1-a273-10a6fbf58d01",
+      "name": "[IN] Recevoir Données",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "tableId": 1168029,
+        "limit": 1,
+        "additionalOptions": {
+          "filters": {
+            "fields": [
+              {
+                "field": 10505906,
+                "value": "={{ $json['Clé_Deduplication'] }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "3f56c71f-a4f8-4e71-947d-5aac5d8431e0",
+      "name": "[DB] Chercher Doublon (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        688
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-doublon",
+              "leftValue": "={{ $('[EXEC] Normaliser & Clé Déduplication').item.json['Clé_Deduplication'] }}",
+              "rightValue": "={{ $json['Clé_Deduplication'] }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d620a7ba-1eb9-4088-aa00-9bbbbd84c309",
+      "name": "[COND] Doublon Existant ?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-places",
+              "leftValue": "={{ $('[DB] Lire Ateliers (Baserow)').item.json['Places Restantes'].toNumber() }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1422defe-cfcf-4a33-bc79-5656e7109df1",
+      "name": "[COND] Places Disponibles ?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        352,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "=alexandre.pericat@gmail.com",
+        "subject": "Confirmation de votre inscription",
+        "message": "=<div style=\"max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #333333; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;\">\n    <!-- EN-TÊTE / LOGO -->\n    <div style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 4px solid #d9534f;\">\n        <h1 style=\"margin: 0; color: #2c3e50; font-size: 28px; letter-spacing: 1px;\">\n            <span style=\"color: #d9534f;\">🚀</span> SkillBoost\n        </h1>\n        <p style=\"margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;\">La plateforme de vos compétences</p>\n    </div>\n    <!-- CORPS DU MESSAGE -->\n    <div style=\"padding: 30px;\">\n        <h2 style=\"margin-top: 0;\">🎉 Votre inscription est confirmée !</h2>\n        \n        <p>Bonjour,</p>\n        \n        <p>Nous avons le plaisir de vous confirmer votre réservation pour l'atelier :<br>\n        <strong>{{ $('[COND] Filtrer Atelier Sélectionné').item.json[\"Nom de l'atelier\"] }}</strong></p>\n        \n        <h3 style=\"color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 25px;\">📌 Vos détails pratiques :</h3>\n        <ul style=\"line-height: 1.6;\">\n            <li><strong>📅 Date et heure :</strong> {{ DateTime.fromISO($('[COND] Filtrer Atelier Sélectionné').item.json[\"Date et Heure\"]).setZone('Europe/Paris').setLocale('fr').toFormat('dd/MM/yyyy à HH:mm') }}</li>\n            <li><strong>📍 Lieu / Lien :</strong> {{ $('[COND] Filtrer Atelier Sélectionné').item.json[\"Lieu\"] }}</li>\n            <li><strong>🎒 Matériel requis :</strong> {{ $('[COND] Filtrer Atelier Sélectionné').item.json[\"Materiel\"] }}</li>\n        </ul>\n        \n        <p><em>Pensez à bien noter ce rendez-vous dans votre agenda !</em></p>\n        \n        <!-- SECTION ANNULATION -->\n        <div style=\"background-color: #fff3f3; padding: 20px; border-radius: 5px; margin-top: 30px; border-left: 4px solid #d9534f;\">\n            <p style=\"margin-top: 0;\"><strong>Un empêchement ?</strong></p>\n            <p style=\"font-size: 14px;\">Les places sont limitées. Si vous ne pouvez plus assister à l'atelier, merci de libérer votre place pour les personnes sur liste d'attente en cliquant ci-dessous :</p>\n            \n            <a href=\"https://vps-308cfbf7.vps.ovh.net/webhook/annulation-inscription?cle={{ $('[EXEC] Normaliser & Clé Déduplication').item.json['Clé_Deduplication'] }}\" style=\"background-color: #d9534f; color: white; padding: 10px 18px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;\">Annuler mon inscription</a>\n        </div>\n        \n        <p style=\"margin-top: 30px; font-size: 14px;\">\n            À très vite,<br>\n            <strong>L'équipe SkillBoost</strong>\n        </p>\n    </div>\n</div>",
+        "options": {}
+      },
+      "id": "eaeaf7e5-288c-43ac-92fb-9995a675f07a",
+      "name": "[MAIL] Envoyer Confirmation (Gmail)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1024,
+        640
+      ],
+      "webhookId": "c4384899-2b98-4c9f-b630-91c3bf48b598",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FdLDRI4Zfwfxf4W8",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "=alexandre.pericat@gmail.com",
+        "subject": "Inscription sur liste d'attente",
+        "message": "=<div style=\"max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #333333; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;\">\n    <!-- EN-TÊTE / LOGO -->\n    <div style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 4px solid #f0ad4e;\">\n        <h1 style=\"margin: 0; color: #2c3e50; font-size: 28px; letter-spacing: 1px;\">\n            <span style=\"color: #d9534f;\">🚀</span> SkillBoost\n        </h1>\n        <p style=\"margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;\">La plateforme de vos compétences</p>\n    </div>\n\n    <!-- CORPS DU MESSAGE -->\n    <div style=\"padding: 30px;\">\n        <h2 style=\"margin-top: 0; color: #f0ad4e;\">⏳ Vous êtes sur liste d'attente</h2>\n        \n        <p>Bonjour,</p>\n        \n        <p>L'atelier <strong>{{ $('[COND] Filtrer Atelier Sélectionné').item.json[\"Nom de l'atelier\"] }}</strong> est actuellement victime de son succès !</p>\n\n        <!-- BLOC RÉCAPITULATIF ATELIER -->\n        <div style=\"background-color: #f4f6f8; border-left: 4px solid #4f46e5; padding: 15px; margin: 20px 0; border-radius: 4px;\">\n            <p style=\"margin: 0 0 8px 0; font-weight: bold; color: #2c3e50;\">📍 Rappel des informations :</p>\n            <p style=\"margin: 4px 0; font-size: 14px; color: #555555;\"><strong>Date & Heure :</strong> {{ DateTime.fromISO($('[COND] Filtrer Atelier Sélectionné').item.json[\"Date et Heure\"]).setLocale('fr').toFormat(\"dd/MM/yyyy 'à' HH'h'mm\") }}</p>\n            <p style=\"margin: 4px 0; font-size: 14px; color: #555555;\"><strong>Lieu / Lien :</strong> {{ $('[COND] Filtrer Atelier Sélectionné').item.json[\"Lieu\"] }}</p>\n        </div>\n        \n        <p>Votre demande a bien été enregistrée et vous êtes officiellement sur liste d'attente. Si un participant annule sa venue, notre système vous repêchera automatiquement et vous recevrez un email de confirmation.</p>\n        \n        <p><em>Inutile de nous recontacter, on s'occupe de tout !</em></p>\n        \n        <!-- SECTION ANNULATION POUR LA WAITLIST -->\n        <div style=\"background-color: #fff3f3; padding: 20px; border-radius: 5px; margin-top: 30px; border-left: 4px solid #d9534f;\">\n            <p style=\"margin-top: 0;\"><strong>Un changement de programme ?</strong></p>\n            <p style=\"font-size: 14px;\">Si vous savez d'ores et déjà que vous ne pourrez pas participer à cet atelier même en cas de désistement, vous pouvez annuler votre demande de liste d'attente en cliquant ci-dessous :</p>\n            \n            <!-- Lien magique d'annulation direct via la clé de déduplication -->\n            <a href=\"https://vps-308cfbf7.vps.ovh.net/webhook/annulation-inscription?cle={{ $('[EXEC] Normaliser & Clé Déduplication').item.json['Clé_Deduplication'] }}\" style=\"background-color: #d9534f; color: white; padding: 10px 18px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;\">Annuler ma demande</a>\n        </div>\n        \n        <p style=\"margin-top: 30px; font-size: 14px;\">\n            À très vite,<br>\n            <strong>L'équipe SkillBoost</strong>\n        </p>\n    </div>\n</div>",
+        "options": {}
+      },
+      "id": "5500537b-b375-4037-8695-00ffb84eb8eb",
+      "name": "[MAIL] Envoyer Info Waitlist (Gmail)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1024,
+        976
+      ],
+      "webhookId": "9fefa60a-c268-4d45-9f43-b964b14ee626",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FdLDRI4Zfwfxf4W8",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "-5434292459",
+        "text": "=🟢 Nouvelle inscription confirmée !\n📧 Email : {{ $json.Email }}\n🏷️ Atelier : {{ $('[COND] Filtrer Atelier Sélectionné').item.json.ID_Atelier }} {{ $('[COND] Filtrer Atelier Sélectionné').item.json['Nom de l\\'atelier'] }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a3e43247-08e5-4a77-93cc-29a6381b2e6d",
+      "name": "[BOT] Notifier Inscription (Telegram)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        640
+      ],
+      "webhookId": "cb0492b2-5de8-49ca-82fd-83dfc2df816f",
+      "credentials": {
+        "telegramApi": {
+          "id": "pGOfqScQdHphzasG",
+          "name": "SkillBoostAdminBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "tableId": 1168028,
+        "additionalOptions": {}
+      },
+      "id": "76a43d2a-e09a-42d2-bc25-27709e57da7d",
+      "name": "[DB] Lire Ateliers (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        832
+      ],
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10522871,
+              "fieldValue": "DOUBLON"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[EXEC] Normaliser & Clé Déduplication').item.json.email }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[DB] Chercher Doublon (Baserow)').item.json['Atelier Choisi'][0].value }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ \"Inscription bloquée : doublon détecté\"}}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            }
+          ]
+        }
+      },
+      "id": "245f6cea-5de1-488c-9a68-c3522866139b",
+      "name": "[LOG] Tracer Doublon (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        592
+      ],
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1168029,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10504982,
+              "fieldValue": "Confirmée"
+            },
+            {
+              "fieldId": 10505906,
+              "fieldValue": "={{ $('[EXEC] Normaliser & Clé Déduplication').item.json['Clé_Deduplication'] }}"
+            },
+            {
+              "fieldId": 10504983,
+              "fieldValue": "={{ $json['ID_Atelier'] }}"
+            },
+            {
+              "fieldId": 10504981,
+              "fieldValue": "={{ $('[EXEC] Normaliser & Clé Déduplication').item.json.email }}"
+            }
+          ]
+        }
+      },
+      "id": "e0d55d9f-dd5a-491e-8a80-887c8d09f100",
+      "name": "[DB] Valider Inscription (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        576,
+        640
+      ],
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1168029,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10504982,
+              "fieldValue": "Waitlist"
+            },
+            {
+              "fieldId": 10504981,
+              "fieldValue": "={{ $('[EXEC] Normaliser & Clé Déduplication').item.json.email }}"
+            },
+            {
+              "fieldId": 10504983,
+              "fieldValue": "={{ $('[IN] Recevoir Données').item.json.body.atelier }}"
+            },
+            {
+              "fieldId": 10505906,
+              "fieldValue": "={{ $('[EXEC] Normaliser & Clé Déduplication').item.json['Clé_Deduplication'] }}"
+            }
+          ]
+        }
+      },
+      "id": "6de07ab2-b062-4969-9ec9-60d5ee27b0cb",
+      "name": "[DB] Ajouter Waitlist (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        800,
+        976
+      ],
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10522871,
+              "fieldValue": "INSCRIPTION_CONFIRMEE"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[EXEC] Normaliser & Clé Déduplication').item.json.email }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[IN] Recevoir Données').item.json.body.atelier }}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ \"Inscription validée avec succès\" }}"
+            }
+          ]
+        }
+      },
+      "id": "03c97153-d422-476f-9444-dae78a081634",
+      "name": "[LOG] Tracer Inscription (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        784
+      ],
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            },
+            {
+              "fieldId": 10522871,
+              "fieldValue": "WAITLIST"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ \"Atelier complet. Participant placé sur liste d'attente pour l'atelier \" }}"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[EXEC] Normaliser & Clé Déduplication').item.json.email }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[IN] Recevoir Données').item.json.body.atelier }}"
+            }
+          ]
+        }
+      },
+      "id": "58440a6b-c11b-445a-a58d-526362460000",
+      "name": "[LOG] Tracer Waitlist (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        976
+      ],
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "=alexandre.pericat@gmail.com",
+        "subject": "Confirmation de votre inscription",
+        "message": "=<div style=\"max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #333333; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;\">\n    <!-- EN-TÊTE / LOGO -->\n    <div style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 4px solid #3b82f6;\">\n        <h1 style=\"margin: 0; color: #2c3e50; font-size: 28px; letter-spacing: 1px;\">\n            <span style=\"color: #4f46e5;\">🚀</span> SkillBoost\n        </h1>\n        <p style=\"margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;\">La plateforme de vos compétences</p>\n    </div>\n\n    <!-- CORPS DU MESSAGE -->\n    <div style=\"padding: 30px;\">\n        <h2 style=\"margin-top: 0; color: #1d4ed8;\">ℹ️ Vous êtes déjà inscrit(e)</h2>\n        \n        <p>Bonjour,</p>\n        \n        <p>Vous venez de soumettre une demande d'inscription avec l'adresse <strong>{{ $('[EXEC] Normaliser & Clé Déduplication').item.json['email'] }}</strong> pour l'atelier <strong>{{ $('[EXEC] Normaliser & Clé Déduplication').item.json['atelier'] }}</strong>.</p>\n        \n        <p>Notre système indique que **votre inscription à cet atelier est déjà enregistrée**. Il n'est pas nécessaire de renouveler votre demande.</p>\n\n        <!-- BLOC RASSURANT -->\n        <div style=\"background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;\">\n            <p style=\"margin: 0; font-size: 14px; color: #1e40af;\">\n                <strong>Inutile de vous réinscrire :</strong> Votre place (ou votre rang sur liste d'attente) est bien conservée selon la date de votre première inscription.\n            </p>\n        </div>\n        \n        <!-- SECTION ANNULATION -->\n        <div style=\"background-color: #fff3f3; padding: 20px; border-radius: 5px; margin-top: 30px; border-left: 4px solid #d9534f;\">\n            <p style=\"margin-top: 0;\"><strong>Vous ne pouvez plus venir ?</strong></p>\n            <p style=\"font-size: 14px;\">Si vous souhaitez libérer votre place pour un autre participant, vous pouvez annuler votre inscription en cliquant ci-dessous :</p>\n            \n            <a href=\"https://vps-308cfbf7.vps.ovh.net/webhook/annulation-inscription?cle={{ $('[EXEC] Normaliser & Clé Déduplication').item.json['Clé_Deduplication'] }}\" style=\"background-color: #d9534f; color: white; padding: 10px 18px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;\">Annuler mon inscription</a>\n        </div>\n        \n        <p style=\"margin-top: 30px; font-size: 14px;\">\n            À très vite,<br>\n            <strong>L'équipe SkillBoost</strong>\n        </p>\n    </div>\n</div>",
+        "options": {}
+      },
+      "id": "5d34623f-b4e3-46b9-afae-102842f532a3",
+      "name": "[MAIL] Envoyer Mail Doublon (Gmail)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1024,
+        400
+      ],
+      "webhookId": "c4384899-2b98-4c9f-b630-91c3bf48b598",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FdLDRI4Zfwfxf4W8",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItem = $input.item.json;\nconst emailBrut = inputItem.body?.email || inputItem.email || \"\";\n\n// 1. Nettoyage de base : minuscules, sans accents, sans espaces\nlet emailPropre = emailBrut\n  .toLowerCase()\n  .normalize(\"NFD\")\n  .replace(/[\\u0300-\\u036f]/g, \"\") // retire les accents\n  .replace(/\\s+/g, \"\")             // retire tous les espaces\n  .trim();\n\n// 2. Correction des fautes de frappe courantes sur les domaines\nconst correctionsDomaines = {\n  \"gmial.com\": \"gmail.com\",\n  \"gmai.com\": \"gmail.com\",\n  \"gmail.co\": \"gmail.com\",\n  \"gnail.com\": \"gmail.com\",\n  \"hotmial.com\": \"hotmail.com\",\n  \"hotmai.com\": \"hotmail.com\",\n  \"hotmil.com\": \"hotmail.com\",\n  \"yaho.com\": \"yahoo.com\",\n  \"yahou.fr\": \"yahoo.fr\",\n  \"outlok.com\": \"outlook.com\",\n  \"outllok.com\": \"outlook.com\",\n  \"orange.f\": \"orange.fr\",\n  \"wanadooo.fr\": \"wanadoo.fr\"\n};\n\nif (emailPropre.includes(\"@\")) {\n  let [partieLocale, domaine] = emailPropre.split(\"@\");\n\n  // Correction si le domaine est une faute connue\n  if (correctionsDomaines[domaine]) {\n    domaine = correctionsDomaines[domaine];\n  }\n\n  // Nettoyage des points multiples dans le domaine (ex: \"gmail..com\")\n  domaine = domaine.replace(/\\.{2,}/g, \".\");\n\n  emailPropre = `${partieLocale}@${domaine}`;\n}\n\n// 3. Récupération de l'ID de l'atelier et génération de la clé de déduplication\nconst idAtelier = inputItem.body?.atelier || inputItem.atelier || \"\";\nconst cleDeduplication = `${emailPropre}_${idAtelier}`;\n\n// 4. On retourne l'objet enrichi pour les nœuds suivants\nreturn {\n  json: {\n    ...inputItem,\n    email: emailPropre,\n    Clé_Deduplication: cleDeduplication\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        688
+      ],
+      "id": "c651dc05-100b-4f53-b8f2-a051d750a03e",
+      "name": "[EXEC] Normaliser & Clé Déduplication"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "filter_atelier",
+              "leftValue": "={{ $('[IN] Recevoir Données').item.json.body.atelier }}",
+              "rightValue": "={{ $json.ID_Atelier }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        832
+      ],
+      "id": "9a036382-8ef4-416f-8b28-d1271ce18da2",
+      "name": "[COND] Filtrer Atelier Sélectionné"
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522871,
+              "fieldValue": "ERREUR_EMAIL"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[EXEC] Normaliser & Clé Déduplication').item.json.email }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ $json.error?.message || 'Erreur d\\'envoi Gmail' }}"
+            },
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[DB] Chercher Doublon (Baserow)').item.json['Atelier Choisi'][0].value }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        400
+      ],
+      "id": "e8d58250-22f2-4068-9ec1-77e1e361c4de",
+      "name": "[LOG] Tracer Erreur Mail (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "[IN] Recevoir Données": {
+      "main": [
+        [
+          {
+            "node": "[EXEC] Normaliser & Clé Déduplication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Chercher Doublon (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[COND] Doublon Existant ?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[COND] Doublon Existant ?1": {
+      "main": [
+        [
+          {
+            "node": "[MAIL] Envoyer Mail Doublon (Gmail)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[DB] Lire Ateliers (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[COND] Places Disponibles ?1": {
+      "main": [
+        [
+          {
+            "node": "[DB] Valider Inscription (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[DB] Ajouter Waitlist (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[MAIL] Envoyer Confirmation (Gmail)": {
+      "main": [
+        [
+          {
+            "node": "[LOG] Tracer Inscription (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[LOG] Tracer Erreur Mail (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[MAIL] Envoyer Info Waitlist (Gmail)": {
+      "main": [
+        [
+          {
+            "node": "[LOG] Tracer Waitlist (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[LOG] Tracer Erreur Mail (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[BOT] Notifier Inscription (Telegram)": {
+      "main": [
+        [
+          {
+            "node": "[MAIL] Envoyer Confirmation (Gmail)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Lire Ateliers (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[COND] Filtrer Atelier Sélectionné",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Valider Inscription (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[BOT] Notifier Inscription (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Ajouter Waitlist (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[MAIL] Envoyer Info Waitlist (Gmail)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[MAIL] Envoyer Mail Doublon (Gmail)": {
+      "main": [
+        [
+          {
+            "node": "[LOG] Tracer Doublon (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[LOG] Tracer Erreur Mail (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[EXEC] Normaliser & Clé Déduplication": {
+      "main": [
+        [
+          {
+            "node": "[DB] Chercher Doublon (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[COND] Filtrer Atelier Sélectionné": {
+      "main": [
+        [
+          {
+            "node": "[COND] Places Disponibles ?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "HS1MOpVRiMoZPgNj",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "339d55be-23ef-43e1-b8e1-94626193d54e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"
+  },
+  "id": "OCrwpdAqcxmaH69k",
+  "tags": [
+    {
+      "updatedAt": "2026-08-11T21:10:31.394Z",
+      "createdAt": "2026-08-11T21:10:31.394Z",
+      "id": "pM1halGNP2912wEm",
+      "name": "[CORE]"
+    }
+  ]
+}

@@ -1,0 +1,533 @@
+{
+  "name": "WF-04A : Relances Automatiques J-1",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c846e641-fbb8-439f-9f30-a531b4d88197",
+              "leftValue": "={{ DateTime.fromISO($json[\"Date et Heure\"]).setZone('Europe/Paris').toFormat('yyyy-MM-dd') }}",
+              "rightValue": "={{ DateTime.now().setZone('Europe/Paris').plus({ days: 1 }).toFormat('yyyy-MM-dd') }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1136,
+        336
+      ],
+      "id": "5d67aa18-cf59-4235-9cb7-022578acdb15",
+      "name": "[COND] Filtrer Inscrits à J-1"
+    },
+    {
+      "parameters": {
+        "sendTo": "=alexandre.pericat@gmail.com",
+        "subject": "Rappel : Votre atelier a lieu demain !",
+        "message": "=<div style=\"max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #333333; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;\">\n\n    <!-- EN-TÊTE / LOGO -->\n    <div style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 4px solid #337ab7;\">\n        <h1 style=\"margin: 0; color: #2c3e50; font-size: 28px; letter-spacing: 1px;\">\n            <span style=\"color: #d9534f;\">🚀</span> SkillBoost\n        </h1>\n        <p style=\"margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;\">C'est pour demain !</p>\n    </div>\n\n    <!-- CORPS DU MESSAGE -->\n    <div style=\"padding: 30px;\">\n        <h2 style=\"margin-top: 0; color: #337ab7;\">⏰ Rappel : Votre atelier a lieu demain</h2>\n        \n        <p>Bonjour,</p>\n        \n        <p>Ceci est un petit rappel automatique pour vous rappeler votre participation à l'atelier :<br>\n        <strong>{{ $json.Nom_Atelier }}</strong></p>\n        \n        <h3 style=\"color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 25px;\">📌 Vos détails pratiques :</h3>\n        <ul style=\"line-height: 1.6;\">\n            <li><strong>📅 Date et heure :</strong> {{ $json.Date_Heure }}</li>\n            <li><strong>📍 Lieu / Lien :</strong> {{ $json.Lieu }}</li>\n            <li><strong>🎒 Matériel requis :</strong> {{ $json.Materiel }}</li>\n        </ul>\n        \n        <p><em>Pensez à vérifier votre matériel ou à tester votre lien de connexion un peu en avance.</em></p>\n        \n        <!-- SECTION URGENCE / EMPÊCHEMENT -->\n        <div style=\"background-color: #fff3f3; padding: 20px; border-radius: 5px; margin-top: 30px; border-left: 4px solid #d9534f;\">\n            <p style=\"margin-top: 0;\"><strong>Un empêchement de dernière minute ?</strong></p>\n            <p style=\"font-size: 14px;\">Si vous savez dès à présent que vous ne pourrez pas venir, merci de libérer votre place pour les personnes en liste d'attente :</p>\n            \n            <a href=\"https://vps-308cfbf7.vps.ovh.net/webhook/annulation-inscription\" style=\"background-color: #d9534f; color: white; padding: 10px 18px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;\">Annuler ma participation</a>\n        </div>\n        \n        <p style=\"margin-top: 30px; font-size: 14px;\">\n            Nous avons hâte de vous y retrouver !<br>\n            <strong>L'équipe SkillBoost</strong>\n        </p>\n    </div>\n</div>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "7d5a633f-bab8-4452-baf2-7df4424d699c",
+      "name": "[MAIL] Envoyer Rappel J-1 (Gmail)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1360,
+        336
+      ],
+      "webhookId": "065a5e1f-0d0e-47b3-a6ab-5dc806f0f2b1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FdLDRI4Zfwfxf4W8",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c846e641-fbb8-439f-9f30-a531b4d88197",
+              "leftValue": "={{ DateTime.fromISO($json[\"Date et Heure\"]).setZone('Europe/Paris').toFormat('yyyy-MM-dd') }}",
+              "rightValue": "={{ DateTime.now().setZone('Europe/Paris').plus({ days: 1 }).toFormat('yyyy-MM-dd') }}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1136,
+        624
+      ],
+      "id": "5023e81e-2e63-43ab-9bca-93b0c04c4bdf",
+      "name": "[COND] Filtrer Waitlist à J-1"
+    },
+    {
+      "parameters": {
+        "sendTo": "=alexandre.pericat@gmail.com",
+        "subject": "Point sur la liste d'attente",
+        "message": "=<div style=\"max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #333333; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;\">\n\n    <!-- EN-TÊTE / LOGO -->\n    <div style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 4px solid #f0ad4e;\">\n        <h1 style=\"margin: 0; color: #2c3e50; font-size: 28px; letter-spacing: 1px;\">\n            <span style=\"color: #d9534f;\">🚀</span> SkillBoost\n        </h1>\n        <p style=\"margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;\">Point sur votre inscription</p>\n    </div>\n\n    <!-- CORPS DU MESSAGE -->\n    <div style=\"padding: 30px;\">\n        <h2 style=\"margin-top: 0; color: #f0ad4e;\">⏳ Point sur la liste d'attente</h2>\n        \n        <p>Bonjour,</p>\n        \n        <p>L'atelier <strong>{{ $json.Nom_Atelier }}</strong> a lieu <strong>demain</strong>.</p>\n        \n        <p>Malheureusement, aucun désistement de dernière minute n'a eu lieu parmi les participants confirmés. Aucune place ne s'est donc libérée pour vous sur la liste d'attente, et nous ne pourrons pas vous y accueillir cette fois-ci.</p>\n        \n        <p>Nous sommes désolés de ne pas avoir pu vous satisfaire pour cette session, mais nous espérons vous voir très bientôt sur nos prochaines dates d'ateliers !</p>\n        \n        <p style=\"margin-top: 30px; font-size: 14px;\">\n            À très vite,<br>\n            <strong>L'équipe SkillBoost</strong>\n        </p>\n    </div>\n</div>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "2e93ddd4-3f80-4861-a95b-e3566c6ed22f",
+      "name": "[MAIL] Envoyer Refus J-1 (Gmail)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1360,
+        624
+      ],
+      "webhookId": "065a5e1f-0d0e-47b3-a6ab-5dc806f0f2b1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FdLDRI4Zfwfxf4W8",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# WF-04A : Relances Automatiques J-1 [CRON]\n\n### 🎯 Objectif\nS'assurer que les participants confirmés n'oublient pas leur session du lendemain et notifier avec bienveillance les personnes restées en liste d'attente qu'aucune place ne s'est libérée.\n\n### ⚙️ Processus\n* **Déclenchement :** Exécution planifiée chaque matin à 08h00 via un Schedule Trigger (`[IN]`).\n* **Extraction :** Lecture conjointe des inscrits confirmés, des personnes en attente et du calendrier des ateliers dans Baserow (`[DB]`).\n* **Jointure des Données :** Fusion interne des participants avec les détails logistiques de leur session (`[EXEC]`).\n* **Filtrage J-1 :** Isolation stricte des événements ayant lieu à J+1 (`[COND]`).\n* **Communications & Audit :** Expédition des e-mails Gmail adaptés (rappel ou clôture de liste d'attente) et traçabilité systématique dans les logs (`[MAIL]`, `[LOG]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Déclencheur temporel planifié (Schedule Trigger)\n* `[DB]` : Lectures des tables Inscriptions et Ateliers\n* `[EXEC]` : Jointures et appariements de jeux de données\n* `[COND]` : Filtrage temporel dynamique (date événement = J+1)\n* `[MAIL]` : Envois transactionnels via Gmail\n* `[LOG]` : Journalisation d'audit dans Baserow",
+        "height": 512,
+        "width": 896,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -256
+      ],
+      "id": "dc3cb706-b4ab-42c0-bb6e-a75c60a24cf0",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10522871,
+              "fieldValue": "RAPPEL_J1"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[COND] Filtrer Inscrits à J-1').item.json.Email }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[COND] Filtrer Inscrits à J-1').item.json.ID_Atelier }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "Rappel auto par mail à J-1"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        336
+      ],
+      "id": "64cc96b7-d498-4a34-8308-ae5c22c711f1",
+      "name": "[LOG] Tracer Rappel J-1 (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10522871,
+              "fieldValue": "WAITLIST_DISCALIFIE"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[COND] Filtrer Inscrits à J-1').item.json.Email }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[COND] Filtrer Inscrits à J-1').item.json.ID_Atelier }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "Pas de repeche à J-1 = Discalifié"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        624
+      ],
+      "id": "d001e1de-7ef3-48b3-9066-ca15bc206ede",
+      "name": "[LOG] Tracer Refus J-1 (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "36dc6296-7c61-4ecd-815a-7fcd22c1f4fa",
+      "name": "[IN] Déclencheur Quotidien (08h00)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        464,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "Atelier Choisi",
+              "field2": "ID_Atelier"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ea96e452-99e8-431a-b057-3f0e0ada59fc",
+      "name": "[EXEC] Croiser Inscrits & Ateliers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        912,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "ID_Atelier",
+              "field2": "Atelier Choisi"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        912,
+        624
+      ],
+      "id": "ba18fdeb-fd43-41cf-be42-305e354d1c60",
+      "name": "[EXEC] Croiser Waitlist & Ateliers"
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "tableId": 1168028,
+        "additionalOptions": {}
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        480
+      ],
+      "id": "b16fdc3d-69ac-40e8-962e-844275c4c38a",
+      "name": "[DB] Lire Dates Ateliers (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "tableId": 1168029,
+        "returnAll": true,
+        "additionalOptions": {
+          "filters": {
+            "fields": [
+              {
+                "field": 10504982,
+                "operator": "contains",
+                "value": "Waitlist"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        672
+      ],
+      "id": "647c79ed-ee78-4e3c-bf4f-0a466f6561df",
+      "name": "[DB] Lire Waitlist (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "tableId": 1168029,
+        "additionalOptions": {
+          "filters": {
+            "fields": [
+              {
+                "field": 10504982,
+                "value": "Confirmée"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        288
+      ],
+      "id": "71186cf8-7252-4028-a5b8-afddbb50e88b",
+      "name": "[DB] Lire Inscrits Confirmés (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "[COND] Filtrer Inscrits à J-1": {
+      "main": [
+        [
+          {
+            "node": "[MAIL] Envoyer Rappel J-1 (Gmail)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[MAIL] Envoyer Rappel J-1 (Gmail)": {
+      "main": [
+        [
+          {
+            "node": "[LOG] Tracer Rappel J-1 (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[COND] Filtrer Waitlist à J-1": {
+      "main": [
+        [
+          {
+            "node": "[MAIL] Envoyer Refus J-1 (Gmail)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[MAIL] Envoyer Refus J-1 (Gmail)": {
+      "main": [
+        [
+          {
+            "node": "[LOG] Tracer Refus J-1 (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[IN] Déclencheur Quotidien (08h00)": {
+      "main": [
+        [
+          {
+            "node": "[DB] Lire Inscrits Confirmés (Baserow)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[DB] Lire Dates Ateliers (Baserow)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[DB] Lire Waitlist (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[EXEC] Croiser Inscrits & Ateliers": {
+      "main": [
+        [
+          {
+            "node": "[COND] Filtrer Inscrits à J-1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[EXEC] Croiser Waitlist & Ateliers": {
+      "main": [
+        [
+          {
+            "node": "[COND] Filtrer Waitlist à J-1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Lire Dates Ateliers (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[EXEC] Croiser Inscrits & Ateliers",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "[EXEC] Croiser Waitlist & Ateliers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Lire Waitlist (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[EXEC] Croiser Waitlist & Ateliers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "[DB] Lire Inscrits Confirmés (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[EXEC] Croiser Inscrits & Ateliers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "HS1MOpVRiMoZPgNj",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "4357666e-ca20-4370-8007-f7dedbb9b7e1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"
+  },
+  "id": "YLMBGjlQSvlrEXra",
+  "tags": [
+    {
+      "updatedAt": "2026-08-11T21:11:45.867Z",
+      "createdAt": "2026-08-11T21:11:45.867Z",
+      "id": "o3q1oBKGW0SMspN6",
+      "name": "[CRON]"
+    }
+  ]
+}

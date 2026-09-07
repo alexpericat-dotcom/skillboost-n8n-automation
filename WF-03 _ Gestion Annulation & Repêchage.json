@@ -1,0 +1,791 @@
+{
+  "name": "WF-03 : Gestion Annulation & Repêchage",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "annulation-inscription",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -176,
+        -768
+      ],
+      "id": "4b871754-1be2-45ab-96fe-720b473b091a",
+      "name": "[IN] Recevoir Annulation",
+      "webhookId": "e9c7d8fe-fe79-49d0-8edf-dd1830b094bb"
+    },
+    {
+      "parameters": {
+        "sendTo": "alexandre.pericat@gmail.com",
+        "subject": "Confirmation de l'annulation de votre atelier.",
+        "message": "=<div style=\"max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #333333; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;\">\n    <div style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 4px solid #95a5a6;\">\n        <h1 style=\"margin: 0; color: #2c3e50; font-size: 28px; letter-spacing: 1px;\">\n            <span style=\"color: #d9534f;\">🚀</span> SkillBoost\n        </h1>\n    </div>\n    <div style=\"padding: 30px;\">\n        <h2 style=\"margin-top: 0; color: #7f8c8d;\">✔️ Annulation confirmée</h2>\n        <p>Bonjour,</p>\n        <p>Nous vous confirmons la bonne prise en compte de votre annulation pour l'atelier :<br>\n        <strong>{{ $json.body.atelier_id }}</strong></p> <!-- Mets la variable du nom si tu l'as récupérée dans WF-05 -->\n        <p>C'est dommage de ne pas vous compter parmi nous cette fois-ci, mais nous vous remercions d'avoir libéré votre place. Cela fera un heureux sur notre liste d'attente !</p>\n        <p style=\"margin-top: 30px; font-size: 14px;\">À très bientôt pour un prochain atelier,<br><strong>L'équipe SkillBoost</strong></p>\n    </div>\n</div>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        -768
+      ],
+      "id": "a3fc2296-4e93-45c7-a391-5ce40595fed7",
+      "name": "[MAIL] Confirmer Annulation (Gmail)",
+      "webhookId": "177c63c8-9106-43ae-a600-613e11274128",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FdLDRI4Zfwfxf4W8",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "alexandre.pericat@gmail.com",
+        "subject": "Une place s'est libérée pour votre atelier !",
+        "message": "=<div style=\"max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #333333; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;\">\n\n    <!-- EN-TÊTE / LOGO -->\n    <div style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 4px solid #5cb85c;\">\n        <h1 style=\"margin: 0; color: #2c3e50; font-size: 28px; letter-spacing: 1px;\">\n            <span style=\"color: #5cb85c;\">🎉</span> SkillBoost\n        </h1>\n        <p style=\"margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;\">La plateforme de vos compétences</p>\n    </div>\n\n    <!-- CORPS DU MESSAGE -->\n    <div style=\"padding: 30px;\">\n        <h2 style=\"margin-top: 0; color: #5cb85c;\">🌟 Bonne nouvelle, vous êtes repêché(e) !</h2>\n        \n        <p>Bonjour,</p>\n        \n        <p>Suite à un désistement, une place s'est libérée et notre système vous a automatiquement attribué la place pour l'atelier :<br>\n        <strong>{{ $('[DB] Chercher Infos Atelier (Baserow)').item.json[\"Nom de l'atelier\"] }}</strong></p>\n        \n        <h3 style=\"color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 25px;\">📌 Vos détails pratiques :</h3>\n        <ul style=\"line-height: 1.6;\">\n            <li><strong>📅 Date et heure :</strong> {{ DateTime.fromISO($('[DB] Chercher Infos Atelier (Baserow)').item.json[\"Date et Heure\"]).setZone('Europe/Paris').setLocale('fr').toFormat('dd/MM/yyyy à HH:mm') }}</li>\n            <li><strong>📍 Lieu / Lien :</strong> {{ $('[DB] Chercher Infos Atelier (Baserow)').item.json[\"Lieu\"] }}</li>\n            <li><strong>🎒 Matériel requis :</strong> {{ $('[DB] Chercher Infos Atelier (Baserow)').item.json[\"Materiel\"] }}</li>\n        </ul>\n        \n        <p><em>Votre inscription est désormais confirmée. Pensez à bien noter ce rendez-vous dans votre agenda !</em></p>\n        \n        <!-- SECTION ANNULATION SI BESOIN -->\n        <div style=\"background-color: #fff3f3; padding: 20px; border-radius: 5px; margin-top: 30px; border-left: 4px solid #d9534f;\">\n            <p style=\"margin-top: 0;\"><strong>Un nouvel empêchement ?</strong></p>\n            <p style=\"font-size: 14px;\">Si vous ne pouvez finalement plus venir, vous pouvez libérer cette place en un clic :</p>\n            <a href=\"https://vps-308cfbf7.vps.ovh.net/webhook/annulation-inscription?cle={{ $('[DB] Confirmer Repêchage (Baserow)').item.json.Clé_Deduplication }}\" style=\"background-color: #d9534f; color: white; padding: 10px 18px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;\">Annuler ma participation</a>\n        </div>\n        \n        <p style=\"margin-top: 30px; font-size: 14px;\">\n            À très vite,<br>\n            <strong>L'équipe SkillBoost</strong>\n        </p>\n    </div>\n</div>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1840,
+        -576
+      ],
+      "id": "1e6ada67-1f5c-47c1-82f9-dc8306498db1",
+      "name": "[MAIL] Annoncer Repêchage (Gmail)",
+      "webhookId": "177c63c8-9106-43ae-a600-613e11274128",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FdLDRI4Zfwfxf4W8",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "-5434292459",
+        "text": "=🟢 Repêchage Waitlist : {{ $('[DB] Confirmer Repêchage (Baserow)').item.json.Email }} a été promu(e) sur l'atelier {{ $('[DB] MAJ Statut Annulé (Baserow)').item.json['Atelier Choisi']?.[0]?.value || '' }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1616,
+        -384
+      ],
+      "id": "fd7220cd-7893-42dd-96cc-f5aabfb2dce0",
+      "name": "[BOT] Notifier Repêchage (Telegram)",
+      "webhookId": "2e9a09b9-8f70-4160-8545-b9fd8297420e",
+      "credentials": {
+        "telegramApi": {
+          "id": "pGOfqScQdHphzasG",
+          "name": "SkillBoostAdminBot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "# WF-03 : Gestion Annulation & Repêchage [CORE]\n\n### 🎯 Objectif\nTraiter les désistements de manière autonome, libérer la place du participant sortant, altérer sa clé d'unicité pour autoriser une réinscription future et exécuter le repêchage FIFO du premier candidat sur liste d'attente.\n\n### ⚙️ Processus\n* **Désistement & Libération :**\n  * Réception de l'identifiant d'annulation via Webhook GET (`[IN]`).\n  * Rendu synchrone de la page web de confirmation de désistement (`[OUT]`).\n  * Passage du statut à `Annulée` et concaténation d'un timestamp à la clé de déduplication dans Baserow (`[DB]`).\n  * E-mail d'annulation Gmail et log d'audit immédiat (`[MAIL]`, `[LOG]`).\n* **Algorithme de Repêchage FIFO :**\n  * Requête des participants au statut `Waitlist` pour l'atelier concerné (`[DB]`).\n  * Tri chronologique strict sur la date d'inscription et isolation du premier inscrit (`[EXEC]`).\n  * Vérification de l'existence d'un éligible (`[COND]`).\n  * Promotion au statut `Confirmée` dans Baserow (`[DB]`).\n  * Récupération des informations de session et notifications multicanales coordonnateur et repêché (`[DB]`, `[BOT]`, `[MAIL]`, `[LOG]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Point d'entrée déclencheur (Webhook GET)\n* `[OUT]` : Rendu synchrone de la réponse HTTP au navigateur\n* `[DB]` : Lectures et modifications dans les tables Baserow\n* `[EXEC]` : Algorithmes de tri et manipulation des données en file\n* `[COND]` : Vérification logique d'éligibilité en attente\n* `[BOT]` : Alerte instantanée au coordinateur sur Telegram\n* `[MAIL]` : Notifications transactionnelles sortantes (Gmail)\n* `[LOG]` : Journalisation d'audit et captures d'erreurs en base",
+        "height": 640,
+        "width": 1120,
+        "color": "#1A1E5B"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -1536
+      ],
+      "id": "87ee4243-3e74-40a2-a1ac-c3ebd09810dd",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "tableId": 1168029,
+        "limit": 1,
+        "additionalOptions": {
+          "filters": {
+            "fields": [
+              {
+                "field": 10505906,
+                "value": "={{ $('[IN] Recevoir Annulation').item.json.query.cle }}"
+              }
+            ]
+          }
+        }
+      },
+      "name": "[DB] Chercher Inscription (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -672
+      ],
+      "id": "2c1abea8-27d8-4248-a172-e07c8e6ccb9d",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "update",
+        "tableId": 1168029,
+        "rowId": "={{ $json.id }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10504982,
+              "fieldValue": "Annulée"
+            },
+            {
+              "fieldId": 10505906,
+              "fieldValue": "={{ $json.Clé_Deduplication }}_{{ Date.now() }}"
+            }
+          ]
+        }
+      },
+      "name": "[DB] MAJ Statut Annulé (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -672
+      ],
+      "id": "265117be-edfc-4c3e-8850-1a823045eea9",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "tableId": 1168029,
+        "limit": 1,
+        "additionalOptions": {
+          "filters": {
+            "fields": [
+              {
+                "field": 10504982,
+                "operator": "contains",
+                "value": "Waitlist"
+              },
+              {
+                "field": 10504983,
+                "operator": "link_row_has",
+                "value": "={{ $('[DB] MAJ Statut Annulé (Baserow)').item.json['Atelier Choisi'][0].id }}"
+              }
+            ]
+          }
+        }
+      },
+      "name": "[DB] Chercher Waitlist (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -480
+      ],
+      "id": "9cf94035-ddc4-455a-bcbd-28f9103cc864",
+      "alwaysOutputData": true,
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "name": "[COND] Waitlist Existante ?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1168,
+        -480
+      ],
+      "id": "39845b40-3ee3-44a9-9396-84e225a7c316"
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "update",
+        "tableId": 1168029,
+        "rowId": "={{ $('[DB] Chercher Waitlist (Baserow)').item.json.id }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10504982,
+              "fieldValue": "Confirmée"
+            }
+          ]
+        }
+      },
+      "name": "[DB] Confirmer Repêchage (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        -480
+      ],
+      "id": "7d4e6a13-9509-4f78-8c2f-3c9b36374e4c",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10522871,
+              "fieldValue": "REPECHAGE"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[DB] Confirmer Repêchage (Baserow)').item.json.Email }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[DB] Confirmer Repêchage (Baserow)').item.json['Atelier Choisi'][0].value }}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ \"Utilisateur repêché et confirmé avec succès\" }}"
+            }
+          ]
+        }
+      },
+      "name": "[LOG] Tracer Repêchage (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        -672
+      ],
+      "id": "fe59d1a4-f277-41bf-8b35-cd5ea59e8b5e",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522871,
+              "fieldValue": "ANNULATION"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[DB] MAJ Statut Annulé (Baserow)').item.json.Email }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[DB] MAJ Statut Annulé (Baserow)').item.json['Atelier Choisi'][0].value }}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ \"Statut mis à jour en Annulé et place libérée\" }}"
+            },
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            }
+          ]
+        }
+      },
+      "name": "[LOG] Tracer Annulation (Baserow)",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -864
+      ],
+      "id": "48bcce70-854e-4a3c-97a3-be59f6d0a8ce",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "Date_Inscription"
+            }
+          ]
+        },
+        "options": {
+          "disableDotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -480
+      ],
+      "id": "0e2199a0-2371-45ba-a4a7-1ebfcd386102",
+      "name": "[EXEC] Trier Liste d'Attente (FIFO)"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -480
+      ],
+      "id": "f9f8143f-c8a3-411b-8831-635f632b42dd",
+      "name": "[EXEC] Limiter au Premier Candidat"
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "get",
+        "tableId": 1168028,
+        "rowId": "={{ $('[DB] Confirmer Repêchage (Baserow)').item.json['Atelier Choisi'][0].id }}"
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        1616,
+        -576
+      ],
+      "id": "54c84c5b-e9e3-41b2-a35a-7a47d345b51a",
+      "name": "[DB] Chercher Infos Atelier (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Annulation confirmée - SkillBoost</title>\n    <style>\n        body { font-family: Arial, sans-serif; text-align: center; padding: 0; margin: 0; background-color: #f8f9fa; color: #333333; }\n        .card { background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 500px; margin: 50px auto; overflow: hidden; border: 1px solid #e0e0e0; text-align: left; }\n        .header { background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 4px solid #d9534f; }\n        .content { padding: 30px; }\n        h2 { color: #d9534f; margin-top: 0; }\n        p { line-height: 1.6; }\n    </style>\n</head>\n<body>\n    <div class=\"card\">\n        <!-- EN-TÊTE / LOGO -->\n        <div class=\"header\">\n            <h1 style=\"margin: 0; color: #2c3e50; font-size: 28px; letter-spacing: 1px;\">\n                <span style=\"color: #d9534f;\">🚀</span> SkillBoost\n            </h1>\n            <p style=\"margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;\">La plateforme de vos compétences</p>\n        </div>\n\n        <!-- CORPS DE LA PAGE -->\n        <div class=\"content\">\n            <h2>❌ Inscription annulée</h2>\n            <p>Votre inscription a bien été annulée. Un mail va vous etre envoyé. Votre place a été libérée et, le cas échéant, la première personne sur liste d'attente a été repêchée.</p>\n            <p style=\"margin-top: 25px; font-size: 14px; color: #7f8c8d; text-align: center;\"><em>Vous pouvez fermer cette page en toute sécurité.</em></p>\n        </div>\n    </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        48,
+        -864
+      ],
+      "id": "aed3f5da-768a-46fb-ad10-94854abe7bb1",
+      "name": "[OUT] Afficher Page Annulation"
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522871,
+              "fieldValue": "ERREUR_EMAIL"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[DB] Chercher Inscription (Baserow)').item.json.Email }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ $json.error?.message || 'Erreur d\\'envoi Gmail' }}"
+            },
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[DB] MAJ Statut Annulé (Baserow)').item.json['Atelier Choisi']?.[0]?.value || '' }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        -672
+      ],
+      "id": "01c21626-bad8-4a95-b3bd-3380c43c8357",
+      "name": "[LOG] Tracer Erreur Mail Annulation (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522871,
+              "fieldValue": "ERREUR_EMAIL"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[DB] Confirmer Repêchage (Baserow)').item.json.Email }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ $json.error?.message || 'Erreur d\\'envoi Gmail' }}"
+            },
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "=ID_Atelier : {{ $('[DB] MAJ Statut Annulé (Baserow)').item.json['Atelier Choisi']?.[0]?.value || '' }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        -480
+      ],
+      "id": "806bc753-ff56-47b3-b1b4-6e421fa87e2e",
+      "name": "[LOG] Tracer Erreur Mail Repêchage (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522871,
+              "fieldValue": "ERREUR_TELEGRAM"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[DB] Confirmer Repêchage (Baserow)').item.json.Email || '' }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ $json.error?.message || 'Erreur d\\'envoi Telegram' }}"
+            },
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[DB] Confirmer Repêchage (Baserow)').item.json['Atelier Choisi'][0].value }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        1856,
+        -256
+      ],
+      "id": "8584ffcd-3bfd-4dc5-ab31-1756174a35a3",
+      "name": "[LOG] Tracer Erreur Telegram (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "[IN] Recevoir Annulation": {
+      "main": [
+        [
+          {
+            "node": "[DB] Chercher Inscription (Baserow)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[OUT] Afficher Page Annulation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[MAIL] Confirmer Annulation (Gmail)": {
+      "main": [
+        [
+          {
+            "node": "[LOG] Tracer Annulation (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[LOG] Tracer Erreur Mail Annulation (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[MAIL] Annoncer Repêchage (Gmail)": {
+      "main": [
+        [
+          {
+            "node": "[LOG] Tracer Repêchage (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[LOG] Tracer Erreur Mail Repêchage (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[BOT] Notifier Repêchage (Telegram)": {
+      "main": [
+        [],
+        [
+          {
+            "node": "[LOG] Tracer Erreur Telegram (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Chercher Inscription (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[DB] MAJ Statut Annulé (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] MAJ Statut Annulé (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[MAIL] Confirmer Annulation (Gmail)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[DB] Chercher Waitlist (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Chercher Waitlist (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[EXEC] Trier Liste d'Attente (FIFO)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[COND] Waitlist Existante ?1": {
+      "main": [
+        [
+          {
+            "node": "[DB] Confirmer Repêchage (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Confirmer Repêchage (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[BOT] Notifier Repêchage (Telegram)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[DB] Chercher Infos Atelier (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[LOG] Tracer Annulation (Baserow)": {
+      "main": [
+        []
+      ]
+    },
+    "[EXEC] Trier Liste d'Attente (FIFO)": {
+      "main": [
+        [
+          {
+            "node": "[EXEC] Limiter au Premier Candidat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[EXEC] Limiter au Premier Candidat": {
+      "main": [
+        [
+          {
+            "node": "[COND] Waitlist Existante ?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Chercher Infos Atelier (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[MAIL] Annoncer Repêchage (Gmail)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "HS1MOpVRiMoZPgNj",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "a3889eac-e54e-4d30-ad06-e1049db27996",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"
+  },
+  "id": "ziGGB8RhaskbdDD8",
+  "tags": [
+    {
+      "updatedAt": "2026-08-11T21:10:31.394Z",
+      "createdAt": "2026-08-11T21:10:31.394Z",
+      "id": "pM1halGNP2912wEm",
+      "name": "[CORE]"
+    }
+  ]
+}

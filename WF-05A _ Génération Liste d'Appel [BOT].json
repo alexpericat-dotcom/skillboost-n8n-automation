@@ -1,0 +1,710 @@
+{
+  "name": "WF-05A : Génération Liste d'Appel [BOT]",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# WF-05A : Génération Liste d'Appel [BOT]\n\n### 🎯 Objectif\nPermettre au formateur sur le terrain de déclencher la procédure d'émargement directement depuis son smartphone et de sélectionner dynamiquement l'atelier du jour via Telegram.\n\n### ⚙️ Processus\n* **Déclenchement :** Écoute en temps réel des commandes et clics via le bot Telegram (`[IN]`).\n* **Routage :** Aiguillage selon le type d'interaction (commande initiale, choix atelier, clic présence/absence) (`[COND]`).\n* **Sélection Atelier :** Extraction du catalogue Baserow, formatage dynamique et envoi de la liste des ateliers (`[DB]`, `[EXEC]`, `[BOT]`).\n* **Génération Émargement :** Récupération et filtrage des participants confirmés de l'atelier sélectionné, puis envoi de la liste d'appel interactive (`[DB]`, `[COND]`, `[BOT]`).\n* **Transmission :** Envoi des statuts d'émargement via requêtes HTTP vers le workflow d'audit WF-05B avec feedback immédiat au formateur (`[API]`, `[BOT]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Point d'entrée conversationnel (Déclencheur Telegram)\n* `[COND]` : Routage d'action et filtrage des participants\n* `[DB]` : Lectures du catalogue et des inscrits dans Baserow\n* `[EXEC]` : Formatage JavaScript et extraction des identifiants\n* `[BOT]` : Interactions, claviers inline et messages Telegram\n* `[API]` : Requêtes HTTP sortantes vers WF-05B",
+        "height": 528,
+        "width": 864,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -176,
+        -272
+      ],
+      "typeVersion": 1,
+      "id": "b8785ec9-5163-43b8-b43a-519ea9b5d1ed",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $json.callback_query.id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -128,
+        496
+      ],
+      "id": "18ad575e-994e-453c-92d7-09d94169bec8",
+      "name": "[BOT] Répondre au Clic (Telegram)",
+      "webhookId": "1fb0decd-a799-4061-a538-be5f6f2b86ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "pGOfqScQdHphzasG",
+          "name": "SkillBoostAdminBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message?.text }}",
+                    "rightValue": "/appel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "f2818e8f-8bdc-4886-b7c9-9af1ac25c3c6"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query?.data }}",
+                    "rightValue": "select_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "9512e24e-7244-4f72-a3b2-b0a75e2306e4"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2c46ca41-927e-4460-a171-fb0b20951d2c",
+                    "leftValue": "={{ $json.callback_query?.data }}",
+                    "rightValue": "=présent_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "37fc25e8-3ccf-4d45-9a43-8035bcf80ec1",
+                    "leftValue": "={{ $json.callback_query?.data }}",
+                    "rightValue": "=absent_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -352,
+        560
+      ],
+      "id": "b4794ea9-b875-4233-b41c-656a9d16e190",
+      "name": "[COND] Router Update"
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "tableId": 1168029,
+        "returnAll": true,
+        "additionalOptions": {
+          "filters": {
+            "fields": [
+              {
+                "field": 10504982,
+                "operator": "contains_word",
+                "value": "Confirmée"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        544,
+        496
+      ],
+      "id": "8b4a45a4-b016-4d6a-81cf-4e76168423b5",
+      "name": "[DB] Lire Catalogue Participants (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('[IN] Déclencheur Telegram').item.json.callback_query.message.chat.id }}",
+        "text": "={{ $json.Email }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Présent",
+                    "additionalFields": {
+                      "callback_data": "={{ \"présent_\" + $json.id }}"
+                    }
+                  },
+                  {
+                    "text": "❌ Absent",
+                    "additionalFields": {
+                      "callback_data": "={{ \"absent_\" + $json.id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        496
+      ],
+      "id": "799e17e3-1c7e-40f2-b1c2-a017b253ffa2",
+      "name": "[BOT] Envoyer Liste Participants (Telegram)",
+      "webhookId": "d6fa480b-8e76-460f-8bc1-de979edfc57e",
+      "credentials": {
+        "telegramApi": {
+          "id": "pGOfqScQdHphzasG",
+          "name": "SkillBoostAdminBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "tableId": 1168028,
+        "returnAll": true,
+        "additionalOptions": {
+          "filters": {
+            "fields": [
+              {
+                "field": 10504974,
+                "operator": "contains",
+                "value": "={{ $now.toFormat('dd/MM/yyyy') }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        304
+      ],
+      "id": "9806e9e6-c89e-4798-b8d0-c63ea50e0d2f",
+      "name": "[DB] Lire Catalogue Ateliers (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/emargement",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "participantId",
+              "value": "={{ $json.callback_query.data.split('_')[1] }}"
+            },
+            {
+              "name": "statut",
+              "value": "Présent"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.callback_query.data.split('_')[2] }}"
+            },
+            {
+              "name": "idAtelier",
+              "value": "={{ $json.callback_query.data.split('_')[3] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -128,
+        688
+      ],
+      "id": "9b476cda-c1b8-4cce-a870-b8a5d69212af",
+      "name": "[API] Notifier Présence (WF-05B)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/emargement",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "participantId",
+              "value": "={{ $json.callback_query.data.split('_')[1] }}"
+            },
+            {
+              "name": "statut",
+              "value": "Absent"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.callback_query.data.split('_')[2] }}"
+            },
+            {
+              "name": "idAtelier",
+              "value": "={{ $json.callback_query.data.split('_')[3] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -128,
+        880
+      ],
+      "id": "e1d29bed-9f51-4b0c-a6c4-f72a867d4c7f",
+      "name": "[API] Notifier Absence (WF-05B)"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('[IN] Déclencheur Telegram').item.json.callback_query.message.chat.id }}",
+        "text": "=\"📋 Feuille d'émargement de l'atelier : {{ $json.ID_ATELIER }} ",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        496
+      ],
+      "id": "89a4988b-d7bd-48d8-b67a-81607388057f",
+      "name": "[BOT] Notif - Émargement Atelier (Telegram)",
+      "webhookId": "9f511ac1-d1f1-44e4-aec3-1114956be97f",
+      "credentials": {
+        "telegramApi": {
+          "id": "pGOfqScQdHphzasG",
+          "name": "SkillBoostAdminBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('[COND] Router Update').item.json.callback_query.id }}",
+        "additionalFields": {
+          "show_alert": false,
+          "text": "✅ Présence enregistrée"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        688
+      ],
+      "id": "03f42777-0b74-405f-b0ea-a6a40c6e67df",
+      "name": "[BOT] Feedback Présence Enregistrée",
+      "webhookId": "2e8f5ac1-efee-4754-ba06-0ed21292c3a3",
+      "credentials": {
+        "telegramApi": {
+          "id": "pGOfqScQdHphzasG",
+          "name": "SkillBoostAdminBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('[COND] Router Update').item.json.callback_query.id }}",
+        "additionalFields": {
+          "show_alert": false,
+          "text": "=❌ Absence enregistrée"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        880
+      ],
+      "id": "61b76e20-2484-44eb-a5ad-6f51fede37a2",
+      "name": "[BOT] Feedback Absence Enregistrée",
+      "webhookId": "2e8f5ac1-efee-4754-ba06-0ed21292c3a3",
+      "credentials": {
+        "telegramApi": {
+          "id": "pGOfqScQdHphzasG",
+          "name": "SkillBoostAdminBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -576,
+        592
+      ],
+      "id": "bf65f0b7-e57b-4fb0-af98-53de0fa92a73",
+      "name": "[IN] Déclencheur Telegram",
+      "webhookId": "f86d04aa-0939-4163-8d92-5edd5f0968f4",
+      "credentials": {
+        "telegramApi": {
+          "id": "pGOfqScQdHphzasG",
+          "name": "SkillBoostAdminBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  return {\n    json: {\n      nomAtelier: item.json['Nom de l\\'atelier'],\n      callbackData: 'select_' + item.json.ID_Atelier\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        304
+      ],
+      "id": "4e13a715-9632-490d-ac13-f5a1bcd9276a",
+      "name": "[EXEC] Formater Liste Ateliers"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c8525092-f490-4649-84ad-a835f45a1fd6",
+              "name": "ID_ATELIER",
+              "value": "={{ $('[IN] Déclencheur Telegram').item.json.callback_query.data.replace('select_', '') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        96,
+        496
+      ],
+      "id": "7cb1002a-6c1d-4f40-9d6f-561a780f96b8",
+      "name": "[EXEC] Extraire ID Atelier"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0ea8f6d0-815b-4bf0-a465-09b9c98bfd3c",
+              "leftValue": "={{ $json['Atelier Choisi'][0].value }}",
+              "rightValue": "={{ $('[EXEC] Extraire ID Atelier').item.json.ID_ATELIER }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        496
+      ],
+      "id": "ebd1a7d4-a3e7-48fc-83b8-1002008c4d87",
+      "name": "[COND] Filtrer Inscrits Atelier",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "chatId": "-5434292459",
+        "text": "=📅 *Sélectionnez l'atelier du jour pour l'appel :*",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.nomAtelier }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.callbackData }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        304
+      ],
+      "id": "ac7eec52-c47a-47a6-bca7-8e861ffef16b",
+      "name": "[BOT] Envoyer Liste Ateliers (Telegram)",
+      "webhookId": "3844cc65-9077-4549-9651-2d992c354cf7",
+      "credentials": {
+        "telegramApi": {
+          "id": "pGOfqScQdHphzasG",
+          "name": "SkillBoostAdminBot"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "[BOT] Répondre au Clic (Telegram)": {
+      "main": [
+        [
+          {
+            "node": "[EXEC] Extraire ID Atelier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[COND] Router Update": {
+      "main": [
+        [
+          {
+            "node": "[DB] Lire Catalogue Ateliers (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[BOT] Répondre au Clic (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[API] Notifier Présence (WF-05B)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[API] Notifier Absence (WF-05B)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Lire Catalogue Participants (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[COND] Filtrer Inscrits Atelier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] Lire Catalogue Ateliers (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[EXEC] Formater Liste Ateliers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[BOT] Envoyer Liste Participants (Telegram)": {
+      "main": [
+        []
+      ]
+    },
+    "[API] Notifier Présence (WF-05B)": {
+      "main": [
+        [
+          {
+            "node": "[BOT] Feedback Présence Enregistrée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[API] Notifier Absence (WF-05B)": {
+      "main": [
+        [
+          {
+            "node": "[BOT] Feedback Absence Enregistrée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[BOT] Notif - Émargement Atelier (Telegram)": {
+      "main": [
+        [
+          {
+            "node": "[DB] Lire Catalogue Participants (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[IN] Déclencheur Telegram": {
+      "main": [
+        [
+          {
+            "node": "[COND] Router Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[EXEC] Formater Liste Ateliers": {
+      "main": [
+        [
+          {
+            "node": "[BOT] Envoyer Liste Ateliers (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[EXEC] Extraire ID Atelier": {
+      "main": [
+        [
+          {
+            "node": "[BOT] Notif - Émargement Atelier (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[COND] Filtrer Inscrits Atelier": {
+      "main": [
+        [
+          {
+            "node": "[BOT] Envoyer Liste Participants (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9ed29c3a-a2dd-4501-b1c0-2ce5a2b343ec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"
+  },
+  "id": "tkH8laws8FWvYIZQ",
+  "tags": [
+    {
+      "updatedAt": "2026-08-31T10:22:22.421Z",
+      "createdAt": "2026-08-31T10:22:22.421Z",
+      "id": "I0ja4JWvsy6IF6NF",
+      "name": "[BOT]"
+    }
+  ]
+}

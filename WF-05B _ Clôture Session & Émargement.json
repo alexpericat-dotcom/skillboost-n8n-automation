@@ -1,0 +1,160 @@
+{
+  "name": "WF-05B : Clôture Session & Émargement",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "emargement",
+        "options": {}
+      },
+      "id": "7c7a51ca-d590-4d11-b6ee-923d11d1ef0b",
+      "name": "[IN] Recevoir Émargement",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -112,
+        -48
+      ],
+      "webhookId": "emargement-test"
+    },
+    {
+      "parameters": {
+        "content": "# WF-05B : Clôture Session & Émargement [CORE]\n\n### 🎯 Objectif\nValider la présence effective ou l'absence d'un participant le jour de l'atelier (via le clic terrain transmis par WF-05A) et tracer l'action avec intégrité en base de données.\n\n### ⚙️ Processus\n* **Réception :** Écoute du webhook d'émargement déclenché par WF-05A (`[IN]`).\n* **Mise à jour :** Modification instantanée du statut du participant (`Présent` ou `Absent`) dans la table `Inscriptions` via son ID de ligne (`[DB]`).\n* **Audit & Traçabilité :** Enregistrement automatique de l'événement dans la table `Logs` avec horodatage, e-mail, identifiant atelier et statut validé (`[LOG]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Point d'entrée webhook de synchronisation\n* `[DB]` : Mise à jour du statut dans la table Inscriptions\n* `[LOG]` : Journalisation d'audit dans la table Logs",
+        "height": 496,
+        "width": 736,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        -608
+      ],
+      "id": "dfbd16ec-77f6-4a7e-bf3e-2a4a42a05d8b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "update",
+        "tableId": 1168029,
+        "rowId": "={{ $json.query.participantId }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10504982,
+              "fieldValue": "={{ $json.query.statut }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        -48
+      ],
+      "id": "b1624627-f3ff-4b4d-b059-795fa8215bb6",
+      "name": "[DB] MAJ Statut Présence (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toISO() }}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $json.Email }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $json['Atelier Choisi']?.[0]?.value || $json['Atelier Choisi'] }}"
+            },
+            {
+              "fieldId": 10522871,
+              "fieldValue": "EMARGEMENT_VALIDE"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "Presence/Absence mise à jour "
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        -48
+      ],
+      "id": "70feb5b1-0d70-4389-b2f4-c61a0567940b",
+      "name": "[LOG] Tracer Émargement (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "[IN] Recevoir Émargement": {
+      "main": [
+        [
+          {
+            "node": "[DB] MAJ Statut Présence (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[DB] MAJ Statut Présence (Baserow)": {
+      "main": [
+        [
+          {
+            "node": "[LOG] Tracer Émargement (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bd470183-a0e7-4adb-b1c9-b40f2a7038af",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"
+  },
+  "id": "IihMF4P023hWHpWf",
+  "tags": [
+    {
+      "updatedAt": "2026-08-11T21:10:31.394Z",
+      "createdAt": "2026-08-11T21:10:31.394Z",
+      "id": "pM1halGNP2912wEm",
+      "name": "[CORE]"
+    }
+  ]
+}
