@@ -87,6 +87,7 @@
             "fields": [
               {
                 "field": 10504982,
+                "operator": "contains",
                 "value": "Confirmée"
               }
             ]
@@ -146,7 +147,7 @@
             },
             {
               "fieldId": 10523399,
-              "fieldValue": "={{ $('[COND] Filtrer Inscrits à H-2').item.json['Atelier Choisi'] }}"
+              "fieldValue": "={{ $('[COND] Filtrer Inscrits à H-2').item.json.ID_Atelier }}"
             },
             {
               "fieldId": 10522871,
@@ -203,7 +204,7 @@
         "mergeByFields": {
           "values": [
             {
-              "field1": "Atelier Choisi",
+              "field1": "=Atelier Choisi[0].value",
               "field2": "ID_Atelier"
             }
           ]
@@ -359,7 +360,7 @@
     "errorWorkflow": "HS1MOpVRiMoZPgNj",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "3f64e833-72bc-439c-a877-25df7a86edee",
+  "versionId": "f9b25a8d-48bc-4bd9-8277-f4981551f61b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"
