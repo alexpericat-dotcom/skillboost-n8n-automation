@@ -13,17 +13,17 @@ Solution d'automatisation no-code / low-code pour la gestion de bout en bout des
 
 ---
 
-## 🏗️ Architecture des Workflows n8n
+### 🏗️ Architecture des Workflows n8n
 
-* **WF-00 :** API Disponibilité Ateliers (catalogue en direct)
-* **WF-01 :** Inscription aux Ateliers SkillsBoost
-* **WF-02 :** Traitement Inscription DB (contrôle d'intégrité & idempotence)
-* **WF-03 :** Gestion Annulation & Repêchage (FIFO automatique)
-* **WF-04A :** Relances Automatiques J-1 (CRON matinal & clôture waitlist)
-* **WF-04B :** Relances H-2 (CRON horaire)
-* **WF-05A :** Génération Liste d'Appel (Telegram Bot `/appel`)
-* **WF-05B :** Clôture Session & Émargement interactif
-* **WF-ERR :** Gestionnaire d'Erreurs Globales & Circuit Breaker
+* [**WF-00**](<Workflows/WF-00 _ API Disponibilité Ateliers.json>) : API Disponibilité Ateliers (catalogue en direct)
+* [**WF-01**](<Workflows/WF-01 _ Inscription aux Ateliers SkillsBoost.json>) : Inscription aux Ateliers SkillsBoost
+* [**WF-02**](<Workflows/WF-02 _ Traitement Inscription DB.json>) : Traitement Inscription DB (contrôle d'intégrité & idempotence)
+* [**WF-03**](<Workflows/WF-03 _ Gestion Annulation & Repêchage.json>) : Gestion Annulation & Repêchage (FIFO automatique)
+* [**WF-04A**](<Workflows/WF-04A _ Relances Automatiques J-1.json>) : Relances Automatiques J-1 (CRON matinal & clôture waitlist)
+* [**WF-04B**](<Workflows/WF-04B _ Relances H-2.json>) : Relances H-2 (CRON horaire)
+* [**WF-05A**](<Workflows/WF-05A _ Génération Liste d'Appel [BOT].json>) : Génération Liste d'Appel (Telegram Bot `/appel`)
+* [**WF-05B**](<Workflows/WF-05B _ Clôture Session & Émargement.json>) : Clôture Session & Émargement interactif
+* [**WF-ERR**](<Workflows/WF-ERR _ Gestionnaire d'Erreurs Globales.json>) : Gestionnaire d'Erreurs Globales & Circuit Breaker
 
 ---
 
