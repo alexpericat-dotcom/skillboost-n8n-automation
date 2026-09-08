@@ -1,0 +1,68 @@
+[
+{
+    "id": 94,
+    "Email": "alice@test.fr",
+    "Statut": "Annul\u00e9e",
+    "Atelier Choisi": [
+        "AT-01"
+    ],
+    "Cl\u00e9_Deduplication": "alice@test.fr_AT-01_1788863542298_1788881067733_1788881668514_1788881673325_1788881677154",
+    "Check_Confirm\u00e9": 0,
+    "Date_Inscription": "08/09/2026 10:27"
+},
+{
+    "id": 95,
+    "Email": "bob@test.fr",
+    "Statut": "Pr\u00e9sent",
+    "Atelier Choisi": [
+        "AT-01"
+    ],
+    "Cl\u00e9_Deduplication": "bob@test.fr_AT-01",
+    "Check_Confirm\u00e9": 0,
+    "Date_Inscription": "08/09/2026 10:30"
+},
+{
+    "id": 96,
+    "Email": "alexandre.pericat@gmail.com",
+    "Statut": "Expir\u00e9e",
+    "Atelier Choisi": [
+        "AT-01"
+    ],
+    "Cl\u00e9_Deduplication": "alexandre.pericat@gmail.com_AT-01_EXPIRED",
+    "Check_Confirm\u00e9": 0,
+    "Date_Inscription": "08/09/2026 10:49"
+},
+{
+    "id": 97,
+    "Email": "test-h2@domaine.fr",
+    "Statut": "Annul\u00e9e",
+    "Atelier Choisi": [
+        "AT-01"
+    ],
+    "Cl\u00e9_Deduplication": "test-h2@domaine.fr_AT-01_1788882640892",
+    "Check_Confirm\u00e9": 0,
+    "Date_Inscription": "08/09/2026 15:47"
+},
+{
+    "id": 98,
+    "Email": "attente@domaine.fr",
+    "Statut": "Confirm\u00e9e",
+    "Atelier Choisi": [
+        "AT-01"
+    ],
+    "Cl\u00e9_Deduplication": "attente@domaine.fr_AT-01",
+    "Check_Confirm\u00e9": 1,
+    "Date_Inscription": "08/09/2026 15:49"
+},
+{
+    "id": 99,
+    "Email": "ton_mail@test.fr",
+    "Statut": "Annul\u00e9e",
+    "Atelier Choisi": [
+        "AT-02"
+    ],
+    "Cl\u00e9_Deduplication": "ton_mail@test.fr_AT-02_1788883345106",
+    "Check_Confirm\u00e9": 0,
+    "Date_Inscription": "08/09/2026 15:55"
+}
+]

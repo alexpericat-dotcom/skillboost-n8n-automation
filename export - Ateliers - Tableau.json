@@ -1,0 +1,49 @@
+[
+{
+    "id": 1,
+    "ID_Atelier": "AT-01",
+    "Nom de l'atelier": "Initiation \u00e0 l'IA avec Gemini",
+    "Date et Heure": "08/09/2026 17:30",
+    "Capacit\u00e9 Max": 1,
+    "Lieu": "Lien Google Meet",
+    "Materiel": "Un compte Google actif",
+    "Inscrits Confirm\u00e9s": 1,
+    "Places Restantes": 0,
+    "Inscriptions": [
+        "alice@test.fr",
+        "bob@test.fr",
+        "alexandre.pericat@gmail.com",
+        "test-h2@domaine.fr",
+        "attente@domaine.fr"
+    ],
+    "Taux de remplissage": "100%"
+},
+{
+    "id": 2,
+    "ID_Atelier": "AT-02",
+    "Nom de l'atelier": "Prise de parole en public",
+    "Date et Heure": "09/09/2026 12:00",
+    "Capacit\u00e9 Max": 1,
+    "Lieu": "Salle Innovation (3\u00e8me)",
+    "Materiel": "Aucun, venez comme vous \u00eates !",
+    "Inscrits Confirm\u00e9s": 0,
+    "Places Restantes": 1,
+    "Inscriptions": [
+        "ton_mail@test.fr"
+    ],
+    "Taux de remplissage": "0%"
+},
+{
+    "id": 3,
+    "ID_Atelier": "AT-03",
+    "Nom de l'atelier": "Ma\u00eetriser les Tableaux Crois\u00e9s",
+    "Date et Heure": "14/09/2026 08:00",
+    "Capacit\u00e9 Max": 10,
+    "Lieu": "Lien Zoom",
+    "Materiel": "Excel ou Google Sheets ouvert",
+    "Inscrits Confirm\u00e9s": 0,
+    "Places Restantes": 10,
+    "Inscriptions": [],
+    "Taux de remplissage": "0%"
+}
+]

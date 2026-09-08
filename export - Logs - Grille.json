@@ -1,0 +1,236 @@
+[
+{
+    "id": 114,
+    "Timestamp": "08/09/2026 10:27",
+    "Type_Evenement": "INSCRIPTION_CONFIRMEE",
+    "Email_Utilisateur": "alice@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Inscription valid\u00e9e avec succ\u00e8s",
+    "WorkFlow": "WF-02 : Traitement Inscription DB"
+},
+{
+    "id": 115,
+    "Timestamp": "08/09/2026 10:28",
+    "Type_Evenement": "DOUBLON",
+    "Email_Utilisateur": "alice@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Inscription bloqu\u00e9e : doublon d\u00e9tect\u00e9",
+    "WorkFlow": "WF-02 : Traitement Inscription DB"
+},
+{
+    "id": 116,
+    "Timestamp": "08/09/2026 10:30",
+    "Type_Evenement": "WAITLIST",
+    "Email_Utilisateur": "bob@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Atelier complet. Participant plac\u00e9 sur liste d'attente pour l'atelier",
+    "WorkFlow": "WF-02 : Traitement Inscription DB"
+},
+{
+    "id": 117,
+    "Timestamp": "08/09/2026 10:32",
+    "Type_Evenement": "ANNULATION",
+    "Email_Utilisateur": "alice@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Statut mis \u00e0 jour en Annul\u00e9 et place lib\u00e9r\u00e9e",
+    "WorkFlow": "WF-03 : Gestion Annulation & Rep\u00eachage"
+},
+{
+    "id": 118,
+    "Timestamp": "08/09/2026 10:32",
+    "Type_Evenement": "REPECHAGE",
+    "Email_Utilisateur": "bob@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Utilisateur rep\u00each\u00e9 et confirm\u00e9 avec succ\u00e8s",
+    "WorkFlow": "WF-03 : Gestion Annulation & Rep\u00eachage"
+},
+{
+    "id": 119,
+    "Timestamp": "08/09/2026 10:45",
+    "Type_Evenement": "RAPPEL_J1",
+    "Email_Utilisateur": "bob@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Rappel auto par mail \u00e0 J-1",
+    "WorkFlow": "WF-04A : Relances Automatiques J-1"
+},
+{
+    "id": 120,
+    "Timestamp": "08/09/2026 10:49",
+    "Type_Evenement": "WAITLIST",
+    "Email_Utilisateur": "alexandre.pericat@gmail.com",
+    "ID_Atelier": "AT-01",
+    "Message": "Atelier complet. Participant plac\u00e9 sur liste d'attente pour l'atelier",
+    "WorkFlow": "WF-02 : Traitement Inscription DB"
+},
+{
+    "id": 123,
+    "Timestamp": "08/09/2026 11:19",
+    "Type_Evenement": "RAPPEL_J1",
+    "Email_Utilisateur": "bob@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Rappel auto par mail \u00e0 J-1",
+    "WorkFlow": "WF-04A : Relances Automatiques J-1"
+},
+{
+    "id": 124,
+    "Timestamp": "08/09/2026 11:26",
+    "Type_Evenement": "WAITLIST_DISCALIFIE",
+    "Email_Utilisateur": "alexandre.pericat@gmail.com",
+    "ID_Atelier": "AT-01",
+    "Message": "Pas de repeche \u00e0 J-1 = Discalifi\u00e9",
+    "WorkFlow": "WF-04A : Relances Automatiques J-1"
+},
+{
+    "id": 125,
+    "Timestamp": "08/09/2026 14:23",
+    "Type_Evenement": "RELANCE_H2",
+    "Email_Utilisateur": "bob@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "E-mail de rappel H-2 envoy\u00e9 avec succ\u00e8s",
+    "WorkFlow": "WF-04B : Relances H-2"
+},
+{
+    "id": 126,
+    "Timestamp": "08/09/2026 14:29",
+    "Type_Evenement": "EMARGEMENT_VALIDE",
+    "Email_Utilisateur": "bob@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Presence/Absence mise \u00e0 jour",
+    "WorkFlow": "WF-05B : Cl\u00f4ture Session & \u00c9margement"
+},
+{
+    "id": 128,
+    "Timestamp": "08/09/2026 15:14",
+    "Type_Evenement": "RELANCE_H2",
+    "Email_Utilisateur": "bob@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "E-mail de rappel H-2 envoy\u00e9 avec succ\u00e8s",
+    "WorkFlow": "WF-04B : Relances H-2"
+},
+{
+    "id": 129,
+    "Timestamp": "08/09/2026 15:23",
+    "Type_Evenement": "RAPPEL_J1",
+    "Email_Utilisateur": "bob@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Rappel auto par mail \u00e0 J-1",
+    "WorkFlow": "WF-04A : Relances Automatiques J-1"
+},
+{
+    "id": 130,
+    "Timestamp": "08/09/2026 15:24",
+    "Type_Evenement": "ANNULATION",
+    "Email_Utilisateur": "alice@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Statut mis \u00e0 jour en Annul\u00e9 et place lib\u00e9r\u00e9e",
+    "WorkFlow": "WF-03 : Gestion Annulation & Rep\u00eachage"
+},
+{
+    "id": 131,
+    "Timestamp": "08/09/2026 15:34",
+    "Type_Evenement": "ANNULATION",
+    "Email_Utilisateur": "alice@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Statut mis \u00e0 jour en Annul\u00e9 et place lib\u00e9r\u00e9e",
+    "WorkFlow": "WF-03 : Gestion Annulation & Rep\u00eachage"
+},
+{
+    "id": 132,
+    "Timestamp": "08/09/2026 15:34",
+    "Type_Evenement": "ANNULATION",
+    "Email_Utilisateur": "alice@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Statut mis \u00e0 jour en Annul\u00e9 et place lib\u00e9r\u00e9e",
+    "WorkFlow": "WF-03 : Gestion Annulation & Rep\u00eachage"
+},
+{
+    "id": 133,
+    "Timestamp": "08/09/2026 15:34",
+    "Type_Evenement": "ANNULATION",
+    "Email_Utilisateur": "alice@test.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Statut mis \u00e0 jour en Annul\u00e9 et place lib\u00e9r\u00e9e",
+    "WorkFlow": "WF-03 : Gestion Annulation & Rep\u00eachage"
+},
+{
+    "id": 134,
+    "Timestamp": "08/09/2026 15:47",
+    "Type_Evenement": "INSCRIPTION_CONFIRMEE",
+    "Email_Utilisateur": "test-h2@domaine.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Inscription valid\u00e9e avec succ\u00e8s",
+    "WorkFlow": "WF-02 : Traitement Inscription DB"
+},
+{
+    "id": 135,
+    "Timestamp": "08/09/2026 15:48",
+    "Type_Evenement": "RELANCE_H2",
+    "Email_Utilisateur": "test-h2@domaine.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "E-mail de rappel H-2 envoy\u00e9 avec succ\u00e8s",
+    "WorkFlow": "WF-04B : Relances H-2"
+},
+{
+    "id": 136,
+    "Timestamp": "08/09/2026 15:49",
+    "Type_Evenement": "WAITLIST",
+    "Email_Utilisateur": "attente@domaine.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Atelier complet. Participant plac\u00e9 sur liste d'attente pour l'atelier",
+    "WorkFlow": "WF-02 : Traitement Inscription DB"
+},
+{
+    "id": 137,
+    "Timestamp": "08/09/2026 15:50",
+    "Type_Evenement": "ANNULATION",
+    "Email_Utilisateur": "test-h2@domaine.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Statut mis \u00e0 jour en Annul\u00e9 et place lib\u00e9r\u00e9e",
+    "WorkFlow": "WF-03 : Gestion Annulation & Rep\u00eachage"
+},
+{
+    "id": 138,
+    "Timestamp": "08/09/2026 15:50",
+    "Type_Evenement": "REPECHAGE",
+    "Email_Utilisateur": "attente@domaine.fr",
+    "ID_Atelier": "AT-01",
+    "Message": "Utilisateur rep\u00each\u00e9 et confirm\u00e9 avec succ\u00e8s",
+    "WorkFlow": "WF-03 : Gestion Annulation & Rep\u00eachage"
+},
+{
+    "id": 139,
+    "Timestamp": "08/09/2026 15:55",
+    "Type_Evenement": "INSCRIPTION_CONFIRMEE",
+    "Email_Utilisateur": "ton_mail@test.fr",
+    "ID_Atelier": "AT-02",
+    "Message": "Inscription valid\u00e9e avec succ\u00e8s",
+    "WorkFlow": "WF-02 : Traitement Inscription DB"
+},
+{
+    "id": 140,
+    "Timestamp": "08/09/2026 15:56",
+    "Type_Evenement": "RAPPEL_J1",
+    "Email_Utilisateur": "ton_mail@test.fr",
+    "ID_Atelier": "AT-02",
+    "Message": "Rappel auto par mail \u00e0 J-1",
+    "WorkFlow": "WF-04A : Relances Automatiques J-1"
+},
+{
+    "id": 141,
+    "Timestamp": "08/09/2026 16:02",
+    "Type_Evenement": "RAPPEL_J1",
+    "Email_Utilisateur": "ton_mail@test.fr",
+    "ID_Atelier": "AT-02",
+    "Message": "Rappel auto par mail \u00e0 J-1",
+    "WorkFlow": "WF-04A : Relances Automatiques J-1"
+},
+{
+    "id": 142,
+    "Timestamp": "08/09/2026 16:02",
+    "Type_Evenement": "ANNULATION",
+    "Email_Utilisateur": "ton_mail@test.fr",
+    "ID_Atelier": "AT-02",
+    "Message": "Statut mis \u00e0 jour en Annul\u00e9 et place lib\u00e9r\u00e9e",
+    "WorkFlow": "WF-03 : Gestion Annulation & Rep\u00eachage"
+}
+]
