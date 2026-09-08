@@ -19,7 +19,7 @@ Solution d'automatisation no-code / low-code pour la gestion de bout en bout des
 * **WF-01 :** Inscription aux Ateliers SkillsBoost
 * **WF-02 :** Traitement Inscription DB (contrôle d'intégrité & idempotence)
 * **WF-03 :** Gestion Annulation & Repêchage (FIFO automatique)
-* **WF-04A :** Relances Automatiques J-1 (CRON matinal)
+* **WF-04A :** Relances Automatiques J-1 (CRON matinal & clôture waitlist)
 * **WF-04B :** Relances H-2 (CRON horaire)
 * **WF-05A :** Génération Liste d'Appel (Telegram Bot `/appel`)
 * **WF-05B :** Clôture Session & Émargement interactif
@@ -27,7 +27,22 @@ Solution d'automatisation no-code / low-code pour la gestion de bout en bout des
 
 ---
 
-## 🗄️ Schéma Relationnel des Données (Baserow)
+## 📁 Structure du projet
+
+```text
+.
+├── workflows/
+│   ├── WF-00 _ API Disponibilité Ateliers.json
+│   ├── WF-01 _ Inscription aux Ateliers SkillsBoost.json
+│   ├── WF-02 _ Traitement Inscription DB.json
+│   ├── WF-03 _ Gestion Annulation & Repêchage.json
+│   ├── WF-04A _ Relances Automatiques J-1.json
+│   ├── WF-04B _ Relances H-2.json
+│   ├── WF-05A _ Génération Liste d'Appel [BOT].json
+│   ├── WF-05B _ Clôture Session & Émargement.json
+│   └── WF-ERR _ Gestionnaire d'Erreurs Globales.json
+└── README.md
+```
 
 ```mermaid
 erDiagram
@@ -69,8 +84,14 @@ erDiagram
 ```
 ---
 
-## 🔒 Sécurité & Idempotence
+## 🔒 Sécurité, Idempotence & Résilience
 
-* **Unicité :** Clé composite `email_idAtelier` calculée avant toute écriture.
-* **Annulation dynamique :** Altération de la clé sous la forme `email_idAtelier_timestamp` pour autoriser une réinscription ultérieure.
-* **Audit :** Journalisation de chaque transition d'état dans la table `Logs`.
+### 1. Gestion de l'idempotence et cycle de vie des données
+* **Unicité stricte :** Clé composite `email_idAtelier` calculée avant toute écriture pour empêcher les inscriptions en doublon.
+* **Annulation dynamique :** Altération de la clé sous la forme `email_idAtelier_timestamp` pour autoriser une réinscription ultérieure en cas d'annulation.
+* **Clôture de liste d'attente (WF-04A) :** À J-1, les participants non repêchés passent au statut `Expirée`. La clé est altérée en `email_idAtelier_EXPIRED` afin de libérer l'accès aux futures sessions du même atelier.
+
+### 2. Tolérance aux pannes (Fault Tolerance)
+* **Résilience API Gmail (WF-02, WF-04A, WF-04B) :** Politique de réessais automatiques (3 tentatives, intervalle de 2 000 ms) et routage vers une branche d'erreur dédiée (`error output`) journalisant l'échec dans la table `Logs` sans crasher le workflow.
+* **Découplage Telegram (WF-02, WF-05A) :** Poursuite en sortie standard sur les alertes secondaires pour garantir que les opérations critiques d'inscription ou d'émargement ne soient jamais interrompues par une indisponibilité réseau.
+* **Audit & Traçabilité :** Journalisation systématique dans la table `Logs` via l'identifiant dynamique `{{ $workflow.name }}` et horodatage ISO.
