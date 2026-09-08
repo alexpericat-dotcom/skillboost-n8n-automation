@@ -35,6 +35,8 @@
       "id": "a3fc2296-4e93-45c7-a391-5ce40595fed7",
       "name": "[MAIL] Confirmer Annulation (Gmail)",
       "webhookId": "177c63c8-9106-43ae-a600-613e11274128",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
       "credentials": {
         "gmailOAuth2": {
           "id": "FdLDRI4Zfwfxf4W8",
@@ -61,6 +63,8 @@
       "id": "1e6ada67-1f5c-47c1-82f9-dc8306498db1",
       "name": "[MAIL] Annoncer Repêchage (Gmail)",
       "webhookId": "177c63c8-9106-43ae-a600-613e11274128",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
       "credentials": {
         "gmailOAuth2": {
           "id": "FdLDRI4Zfwfxf4W8",
@@ -774,7 +778,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "versionId": "a3889eac-e54e-4d30-ad06-e1049db27996",
+  "versionId": "5c85ed97-662e-4166-9c9b-c33b2e2cea3a",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"

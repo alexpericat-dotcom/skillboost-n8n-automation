@@ -29,7 +29,7 @@
       "typeVersion": 2.3,
       "position": [
         1136,
-        336
+        320
       ],
       "id": "5d67aa18-cf59-4235-9cb7-022578acdb15",
       "name": "[COND] Filtrer Inscrits à J-1"
@@ -49,15 +49,18 @@
       "typeVersion": 2.1,
       "position": [
         1360,
-        336
+        320
       ],
       "webhookId": "065a5e1f-0d0e-47b3-a6ab-5dc806f0f2b1",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
       "credentials": {
         "gmailOAuth2": {
           "id": "FdLDRI4Zfwfxf4W8",
           "name": "Gmail account"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -87,7 +90,7 @@
       "typeVersion": 2.3,
       "position": [
         1136,
-        624
+        704
       ],
       "id": "5023e81e-2e63-43ab-9bca-93b0c04c4bdf",
       "name": "[COND] Filtrer Waitlist à J-1"
@@ -107,28 +110,31 @@
       "typeVersion": 2.1,
       "position": [
         1360,
-        624
+        704
       ],
       "webhookId": "065a5e1f-0d0e-47b3-a6ab-5dc806f0f2b1",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
       "credentials": {
         "gmailOAuth2": {
           "id": "FdLDRI4Zfwfxf4W8",
           "name": "Gmail account"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
-        "content": "# WF-04A : Relances Automatiques J-1 [CRON]\n\n### 🎯 Objectif\nS'assurer que les participants confirmés n'oublient pas leur session du lendemain et notifier avec bienveillance les personnes restées en liste d'attente qu'aucune place ne s'est libérée.\n\n### ⚙️ Processus\n* **Déclenchement :** Exécution planifiée chaque matin à 08h00 via un Schedule Trigger (`[IN]`).\n* **Extraction :** Lecture conjointe des inscrits confirmés, des personnes en attente et du calendrier des ateliers dans Baserow (`[DB]`).\n* **Jointure des Données :** Fusion interne des participants avec les détails logistiques de leur session (`[EXEC]`).\n* **Filtrage J-1 :** Isolation stricte des événements ayant lieu à J+1 (`[COND]`).\n* **Communications & Audit :** Expédition des e-mails Gmail adaptés (rappel ou clôture de liste d'attente) et traçabilité systématique dans les logs (`[MAIL]`, `[LOG]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Déclencheur temporel planifié (Schedule Trigger)\n* `[DB]` : Lectures des tables Inscriptions et Ateliers\n* `[EXEC]` : Jointures et appariements de jeux de données\n* `[COND]` : Filtrage temporel dynamique (date événement = J+1)\n* `[MAIL]` : Envois transactionnels via Gmail\n* `[LOG]` : Journalisation d'audit dans Baserow",
-        "height": 512,
+        "content": "# WF-04A : Relances Automatiques J-1 [CRON]\n\n### 🎯 Objectif\nS'assurer que les participants confirmés n'oublient pas leur session du lendemain et notifier avec bienveillance les personnes restées en liste d'attente qu'aucune place ne s'est libérée, tout en clôturant administrativement leur dossier.\n\n### ⚙️ Processus\n* **Déclenchement :** Exécution planifiée chaque matin à 08h00 via un Schedule Trigger (`[IN]`).\n* **Extraction :** Lecture conjointe des inscrits confirmés, des personnes en attente et du calendrier des ateliers dans Baserow (`[DB]`).\n* **Jointure des Données :** Fusion interne des participants avec les détails logistiques de leur session (`[EXEC]`).\n* **Filtrage J-1 :** Isolation stricte des événements ayant lieu à J+1 (`[COND]`).\n* **Traitement Confirmés :** Expédition des e-mails Gmail de rappel logistique et journalisation de confirmation dans les logs (`[MAIL]`, `[LOG]`).\n* **Traitement Waitlist :** Envoi de l'e-mail de non-sélection, passage du statut à « Expirée », suffixage de la clé d'idempotence (`_EXPIRED`) pour débloquer les futures sessions, et traçabilité d'audit (`[MAIL]`, `[DB]`, `[LOG]`).\n* **Résilience Gmail :** Politiques de retry (3 tentatives) et routage systématique des rejets vers une traçabilité d'incident dédiée (`[LOG]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Déclencheur temporel planifié (Schedule Trigger)\n* `[DB]` : Lectures et écritures des tables Inscriptions, Ateliers et Logs\n* `[EXEC]` : Jointures et appariements de jeux de données (Merge)\n* `[COND]` : Filtrage temporel dynamique (date événement = J+1)\n* `[MAIL]` : Envois transactionnels via Gmail avec tolérance aux pannes\n* `[LOG]` : Journalisation d'audit et traçabilité des erreurs dans Baserow",
+        "height": 576,
         "width": 896,
         "color": 5
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        656,
-        -256
+        704,
+        -336
       ],
       "id": "dc3cb706-b4ab-42c0-bb6e-a75c60a24cf0",
       "name": "Sticky Note"
@@ -171,7 +177,7 @@
       "typeVersion": 1.1,
       "position": [
         1584,
-        336
+        224
       ],
       "id": "64cc96b7-d498-4a34-8308-ae5c22c711f1",
       "name": "[LOG] Tracer Rappel J-1 (Baserow)",
@@ -199,11 +205,11 @@
             },
             {
               "fieldId": 10522935,
-              "fieldValue": "={{ $('[COND] Filtrer Inscrits à J-1').item.json.Email }}"
+              "fieldValue": "={{ $('[COND] Filtrer Waitlist à J-1').item.json.Email }}"
             },
             {
               "fieldId": 10523399,
-              "fieldValue": "={{ $('[COND] Filtrer Inscrits à J-1').item.json.ID_Atelier }}"
+              "fieldValue": "={{ $('[COND] Filtrer Waitlist à J-1').item.json.ID_Atelier }}"
             },
             {
               "fieldId": 10523412,
@@ -219,8 +225,8 @@
       "type": "n8n-nodes-base.baserow",
       "typeVersion": 1.1,
       "position": [
-        1584,
-        624
+        1808,
+        608
       ],
       "id": "d001e1de-7ef3-48b3-9066-ca15bc206ede",
       "name": "[LOG] Tracer Refus J-1 (Baserow)",
@@ -247,7 +253,7 @@
       "typeVersion": 1.1,
       "position": [
         464,
-        480
+        512
       ]
     },
     {
@@ -256,7 +262,7 @@
         "mergeByFields": {
           "values": [
             {
-              "field1": "Atelier Choisi",
+              "field1": "Atelier Choisi[0].value",
               "field2": "ID_Atelier"
             }
           ]
@@ -269,7 +275,7 @@
       "typeVersion": 2.1,
       "position": [
         912,
-        336
+        320
       ]
     },
     {
@@ -280,7 +286,7 @@
           "values": [
             {
               "field1": "ID_Atelier",
-              "field2": "Atelier Choisi"
+              "field2": "Atelier Choisi[0].value"
             }
           ]
         },
@@ -290,7 +296,7 @@
       "typeVersion": 3.2,
       "position": [
         912,
-        624
+        704
       ],
       "id": "ba18fdeb-fd43-41cf-be42-305e354d1c60",
       "name": "[EXEC] Croiser Waitlist & Ateliers"
@@ -305,7 +311,7 @@
       "typeVersion": 1.1,
       "position": [
         688,
-        480
+        512
       ],
       "id": "b16fdc3d-69ac-40e8-962e-844275c4c38a",
       "name": "[DB] Lire Dates Ateliers (Baserow)",
@@ -337,7 +343,7 @@
       "typeVersion": 1.1,
       "position": [
         688,
-        672
+        752
       ],
       "id": "647c79ed-ee78-4e3c-bf4f-0a466f6561df",
       "name": "[DB] Lire Waitlist (Baserow)",
@@ -357,6 +363,7 @@
             "fields": [
               {
                 "field": 10504982,
+                "operator": "contains",
                 "value": "Confirmée"
               }
             ]
@@ -367,10 +374,142 @@
       "typeVersion": 1.1,
       "position": [
         688,
-        288
+        272
       ],
       "id": "71186cf8-7252-4028-a5b8-afddbb50e88b",
       "name": "[DB] Lire Inscrits Confirmés (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "update",
+        "tableId": 1168029,
+        "rowId": "={{ $('[COND] Filtrer Waitlist à J-1').item.json.id }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10504982,
+              "fieldValue": "Expirée"
+            },
+            {
+              "fieldId": 10505906,
+              "fieldValue": "={{ $('[COND] Filtrer Waitlist à J-1').item.json.Email }}_{{ $('[COND] Filtrer Waitlist à J-1').item.json.ID_Atelier }}_EXPIRED"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        608
+      ],
+      "id": "42e3ecba-1bac-416a-b262-65dadb7fbe6d",
+      "name": "[DB] Clôturer Waitlist Inscription",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522871,
+              "fieldValue": "ERROR_GMAIL_RAPPEL_J1"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[COND] Filtrer Inscrits à J-1').item.json.Email }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[COND] Filtrer Inscrits à J-1').item.json.ID_Atelier }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ \"Échec envoi mail rappel J-1 : \" + ($json.error.message || \"Erreur API\") }}"
+            },
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        416
+      ],
+      "id": "4cd3b5cf-1b5d-4ead-9ecc-79ab1e9640b0",
+      "name": "[LOG] Tracer Erreur Gmail Rappel J-1 (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522871,
+              "fieldValue": "ERROR_GMAIL_REFUS_J1"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[COND] Filtrer Waitlist à J-1').item.json.Email }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[COND] Filtrer Waitlist à J-1').item.json.ID_Atelier }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ \"Échec envoi mail refus J-1 : \" + ($json.error.message || \"Erreur API\") }}"
+            },
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        800
+      ],
+      "id": "1af2ecfc-1311-46f4-a65b-028131d9c952",
+      "name": "[LOG] Tracer Erreur Gmail Refus J-1 (Baserow)",
       "credentials": {
         "baserowTokenApi": {
           "id": "uv5MQZAJKMp096Oc",
@@ -400,6 +539,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "[LOG] Tracer Erreur Gmail Rappel J-1 (Baserow)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -418,7 +564,14 @@
       "main": [
         [
           {
-            "node": "[LOG] Tracer Refus J-1 (Baserow)",
+            "node": "[DB] Clôturer Waitlist Inscription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[LOG] Tracer Erreur Gmail Refus J-1 (Baserow)",
             "type": "main",
             "index": 0
           }
@@ -505,6 +658,17 @@
           }
         ]
       ]
+    },
+    "[DB] Clôturer Waitlist Inscription": {
+      "main": [
+        [
+          {
+            "node": "[LOG] Tracer Refus J-1 (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -516,7 +680,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "versionId": "4357666e-ca20-4370-8007-f7dedbb9b7e1",
+  "versionId": "bfc8eb6f-d01b-4ab7-be63-64b46dc73e69",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"

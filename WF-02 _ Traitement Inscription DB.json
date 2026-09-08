@@ -3,8 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "content": "# WF-02 : Traitement Inscription DB [CORE]\n\n### 🎯 Objectif\nExécuter l'intégralité de la logique métier d'inscription : garantie d'idempotence (anti-doublon), vérification dynamique des quotas d'ateliers et expédition des notifications multicanales.\n\n### ⚙️ Processus\n* **Dédoublonnage :** Normalisation de l'e-mail, génération de la clé unique (`email_atelier`) et vérification dans la table `Inscriptions`.\n* **Routage Doublon :** Si la clé existe déjà, envoi d'une notification dédiée et journalisation sans création de ligne.\n* **Contrôle des Quotas :** Si nouveau participant, lecture des capacités de l'atelier ciblé via Baserow.\n* **Branche Inscription Confirmée :** Création du participant, alerte Telegram au coordinateur, e-mail de validation Gmail et log d'audit.\n* **Branche Liste d'Attente (Waitlist) :** Si jauge atteinte, inscription en statut `Waitlist`, e-mail d'information et traçage dédié.\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Point d'entrée sous-workflow (Execute Workflow Trigger)\n* `[EXEC]` : Normalisation textuelle et dérivation de variables\n* `[DB]` : Lectures et écritures dans les tables métier Baserow\n* `[COND]` : Décisions logiques, aiguillages et filtrages\n* `[BOT]` : Alertes Telegram destinées à la coordination\n* `[MAIL]` : Notifications transactionnelles sortantes (Gmail)\n* `[LOG]` : Traçabilité et historique d'audit centralisé",
-        "height": 512,
+        "content": "# WF-02 : Traitement Inscription DB [CORE]\n\n### 🎯 Objectif\nExécuter l'intégralité de la logique métier d'inscription : garantie d'idempotence (anti-doublon), vérification dynamique des quotas d'ateliers, mise à jour des statuts et expédition résiliente des notifications multicanales.\n\n### ⚙️ Processus\n* **Dédoublonnage :** Normalisation de l'e-mail, génération de la clé unique composite (`email_idAtelier`) et vérification dans la table `Inscriptions`.\n* **Routage Doublon :** Si la clé existe déjà, envoi d'un e-mail d'alerte dédié et journalisation d'audit sans création de doublon.\n* **Contrôle des Quotas :** Si nouveau participant, lecture des capacités de l'atelier ciblé via Baserow.\n* **Branche Inscription Confirmée :** Création du participant au statut \"Confirmée\", alerte Telegram à la coordination, e-mail de validation Gmail et log d'audit.\n* **Branche Liste d'Attente (Waitlist) :** Si jauge atteinte, inscription au statut \"Waitlist\", e-mail d'information et traçage dédié.\n* **Résilience & Gestion des pannes :** Mécanismes de réessais (Retry) sur les notifications et routage des échecs d'API externes (Gmail) vers un log d'erreur dédié pour fiabiliser l'audit sans crasher le workflow.\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Point d'entrée sous-workflow (Execute Workflow Trigger)\n* `[EXEC]` : Normalisation textuelle et dérivation de variables\n* `[DB]` : Lectures et écritures dans les tables métier Baserow\n* `[COND]` : Décisions logiques, aiguillages et filtrages\n* `[BOT]` : Alertes Telegram destinées à la coordination\n* `[MAIL]` : Notifications transactionnelles Gmail avec gestion d'erreurs\n* `[LOG]` : Traçabilité nominale et historisation des incidents d'audit",
+        "height": 560,
         "width": 1024,
         "color": 5
       },
@@ -12,7 +12,7 @@
       "typeVersion": 1,
       "position": [
         -352,
-        -64
+        -112
       ],
       "id": "495a9119-cc23-4de5-aebe-97783c3d2c37",
       "name": "Sticky Note"
@@ -145,6 +145,8 @@
         640
       ],
       "webhookId": "c4384899-2b98-4c9f-b630-91c3bf48b598",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
       "credentials": {
         "gmailOAuth2": {
           "id": "FdLDRI4Zfwfxf4W8",
@@ -169,6 +171,8 @@
         976
       ],
       "webhookId": "9fefa60a-c268-4d45-9f43-b964b14ee626",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
       "credentials": {
         "gmailOAuth2": {
           "id": "FdLDRI4Zfwfxf4W8",
@@ -194,12 +198,15 @@
         640
       ],
       "webhookId": "cb0492b2-5de8-49ca-82fd-83dfc2df816f",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
       "credentials": {
         "telegramApi": {
           "id": "pGOfqScQdHphzasG",
           "name": "SkillBoostAdminBot"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -467,6 +474,8 @@
         400
       ],
       "webhookId": "c4384899-2b98-4c9f-b630-91c3bf48b598",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
       "credentials": {
         "gmailOAuth2": {
           "id": "FdLDRI4Zfwfxf4W8",
@@ -761,7 +770,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "versionId": "339d55be-23ef-43e1-b8e1-94626193d54e",
+  "versionId": "0712602b-ced3-4c24-8e8e-b4ad5f7ca25e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"

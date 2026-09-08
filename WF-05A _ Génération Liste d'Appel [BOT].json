@@ -3,14 +3,14 @@
   "nodes": [
     {
       "parameters": {
-        "content": "# WF-05A : Génération Liste d'Appel [BOT]\n\n### 🎯 Objectif\nPermettre au formateur sur le terrain de déclencher la procédure d'émargement directement depuis son smartphone et de sélectionner dynamiquement l'atelier du jour via Telegram.\n\n### ⚙️ Processus\n* **Déclenchement :** Écoute en temps réel des commandes et clics via le bot Telegram (`[IN]`).\n* **Routage :** Aiguillage selon le type d'interaction (commande initiale, choix atelier, clic présence/absence) (`[COND]`).\n* **Sélection Atelier :** Extraction du catalogue Baserow, formatage dynamique et envoi de la liste des ateliers (`[DB]`, `[EXEC]`, `[BOT]`).\n* **Génération Émargement :** Récupération et filtrage des participants confirmés de l'atelier sélectionné, puis envoi de la liste d'appel interactive (`[DB]`, `[COND]`, `[BOT]`).\n* **Transmission :** Envoi des statuts d'émargement via requêtes HTTP vers le workflow d'audit WF-05B avec feedback immédiat au formateur (`[API]`, `[BOT]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Point d'entrée conversationnel (Déclencheur Telegram)\n* `[COND]` : Routage d'action et filtrage des participants\n* `[DB]` : Lectures du catalogue et des inscrits dans Baserow\n* `[EXEC]` : Formatage JavaScript et extraction des identifiants\n* `[BOT]` : Interactions, claviers inline et messages Telegram\n* `[API]` : Requêtes HTTP sortantes vers WF-05B",
+        "content": "# WF-05A : Génération Liste d'Appel [BOT]\n\n### 🎯 Objectif\nPermettre au formateur sur le terrain de piloter l'émargement en temps réel directement depuis Telegram : sélection dynamique de l'atelier du jour, affichage des inscrits confirmés et saisie interactive des présences / absences.\n\n### ⚙️ Processus\n* **Écoute & Routage :** Réception en temps réel des commandes (`/appel`) et des clics sur claviers inline via le déclencheur Telegram (`[IN]`, `[COND]`).\n* **Sélection Atelier :** Extraction du catalogue Baserow, formatage dynamique et envoi du clavier des ateliers du jour (`[DB]`, `[EXEC]`, `[BOT]`).\n* **Génération Émargement :** Récupération et filtrage des participants confirmés de la session choisie, puis génération des boutons interactifs Présent / Absent (`[DB]`, `[COND]`, `[BOT]`).\n* **Transmission Asynchrone :** Acquittement instantané des interactions utilisateur (`answerCallbackQuery`) et transmission des statuts d'émargement via requêtes HTTP vers le moteur d'audit `WF-05B` (`[API]`, `[BOT]`).\n* **Résilience Conversationnelle :** Tolérance aux pannes sur les acquittements d'UI (continuation sans blocage) et politique de réessais sur l'API Telegram et les transmissions réseau.\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Point d'entrée conversationnel (Déclencheur Telegram)\n* `[COND]` : Routage d'action et filtrage métier\n* `[DB]` : Lectures du catalogue et des inscrits dans Baserow\n* `[EXEC]` : Formatage JavaScript et extraction des identifiants\n* `[BOT]` : Interactions UI, claviers inline et retours formateur\n* `[API]` : Requêtes HTTP sortantes vers le sous-workflow WF-05B",
         "height": 528,
-        "width": 864,
+        "width": 1056,
         "color": 6
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -176,
+        -288,
         -272
       ],
       "typeVersion": 1,
@@ -37,7 +37,8 @@
           "id": "pGOfqScQdHphzasG",
           "name": "SkillBoostAdminBot"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -216,6 +217,7 @@
       "id": "799e17e3-1c7e-40f2-b1c2-a017b253ffa2",
       "name": "[BOT] Envoyer Liste Participants (Telegram)",
       "webhookId": "d6fa480b-8e76-460f-8bc1-de979edfc57e",
+      "retryOnFail": true,
       "credentials": {
         "telegramApi": {
           "id": "pGOfqScQdHphzasG",
@@ -289,7 +291,9 @@
         688
       ],
       "id": "9b476cda-c1b8-4cce-a870-b8a5d69212af",
-      "name": "[API] Notifier Présence (WF-05B)"
+      "name": "[API] Notifier Présence (WF-05B)",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
@@ -325,7 +329,9 @@
         880
       ],
       "id": "e1d29bed-9f51-4b0c-a6c4-f72a867d4c7f",
-      "name": "[API] Notifier Absence (WF-05B)"
+      "name": "[API] Notifier Absence (WF-05B)",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
@@ -344,6 +350,7 @@
       "id": "89a4988b-d7bd-48d8-b67a-81607388057f",
       "name": "[BOT] Notif - Émargement Atelier (Telegram)",
       "webhookId": "9f511ac1-d1f1-44e4-aec3-1114956be97f",
+      "retryOnFail": true,
       "credentials": {
         "telegramApi": {
           "id": "pGOfqScQdHphzasG",
@@ -374,7 +381,8 @@
           "id": "pGOfqScQdHphzasG",
           "name": "SkillBoostAdminBot"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -399,7 +407,8 @@
           "id": "pGOfqScQdHphzasG",
           "name": "SkillBoostAdminBot"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -530,6 +539,7 @@
       "id": "ac7eec52-c47a-47a6-bca7-8e861ffef16b",
       "name": "[BOT] Envoyer Liste Ateliers (Telegram)",
       "webhookId": "3844cc65-9077-4549-9651-2d992c354cf7",
+      "retryOnFail": true,
       "credentials": {
         "telegramApi": {
           "id": "pGOfqScQdHphzasG",
@@ -693,7 +703,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "9ed29c3a-a2dd-4501-b1c0-2ce5a2b343ec",
+  "versionId": "934ef56f-ec44-4c12-bf8b-5620f8e86003",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"

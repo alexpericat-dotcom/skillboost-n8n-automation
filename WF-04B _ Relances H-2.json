@@ -3,8 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "content": "# WF-04B : Relances H-2 [CRON]\n\n### 🎯 Objectif\nEnvoyer un rappel logistique de dernière minute (accès, visioconférence, matériel requis) aux participants confirmés, exactement deux heures avant le coup d'envoi de l'atelier.\n\n### ⚙️ Processus\n* **Déclenchement :** Exécution horaire récurrente via un Schedule Trigger (`[IN]`).\n* **Extraction :** Lecture des inscriptions confirmées et du catalogue des ateliers dans Baserow (`[DB]`).\n* **Jointure :** Appariement des participants avec les horaires exacts de leur session (`[EXEC]`).\n* **Filtrage H-2 :** Sélection dynamique des ateliers démarrant dans l'intervalle des 2 prochaines heures (`[COND]`).\n* **Notification & Traçabilité :** Envoi du rappel opérationnel par e-mail et enregistrement de l'événement dans la table Logs (`[MAIL]`, `[LOG]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Déclencheur temporel horaire (Schedule Trigger)\n* `[DB]` : Requêtes d'extraction sur Baserow\n* `[EXEC]` : Jointure relationnelle des données\n* `[COND]` : Filtrage sur fenêtre horaire glissante (H+2)\n* `[MAIL]` : Expédition des instructions d'accès par Gmail\n* `[LOG]` : Traçabilité de l'envoi dans les logs centraux",
-        "height": 496,
+        "content": "# WF-04B : Relances H-2 [CRON]\n\n### 🎯 Objectif\nEnvoyer un rappel logistique de dernière minute (lien visio ou adresse) aux participants confirmés, exactement deux heures avant le début de leur session.\n\n### ⚙️ Processus\n* **Déclenchement :** Exécution horaire récurrente via un Schedule Trigger (`[IN]`).\n* **Extraction :** Lecture des inscriptions confirmées et du catalogue des ateliers dans Baserow (`[DB]`).\n* **Jointure :** Appariement des participants avec les horaires exacts de leur session (`[EXEC]`).\n* **Filtrage H-2 :** Sélection dynamique des ateliers démarrant dans l'intervalle des 2 prochaines heures (`[COND]`).\n* **Notification :** Expédition des instructions d'accès par e-mail via Gmail (`[MAIL]`).\n* **Traçabilité nominale :** Enregistrement de l'envoi réussi dans la table `Logs` (`[LOG]`).\n* **Résilience & Tolérance aux pannes :** Politique de réessais (3 tentatives) et routage d'incident vers un log d'erreur dédié en cas de rejet API Gmail (`[LOG]`).\n\n### 🏷️ Conventions de nommage\n* `[IN]` : Déclencheur temporel horaire (Schedule Trigger)\n* `[DB]` : Requêtes d'extraction et d'écriture Baserow\n* `[EXEC]` : Jointure relationnelle des données (Merge)\n* `[COND]` : Filtrage sur fenêtre horaire glissante (H+2)\n* `[MAIL]` : Expédition des instructions d'accès par Gmail avec gestion des pannes\n* `[LOG]` : Traçabilité des succès et des incidents dans les logs centraux",
+        "height": 544,
         "width": 896,
         "color": "#145D4E"
       },
@@ -64,16 +64,19 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        1344,
+        1360,
         416
       ],
       "webhookId": "4917ab33-b32f-4456-a1ac-5efc3a1fd6fa",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
       "credentials": {
         "gmailOAuth2": {
           "id": "FdLDRI4Zfwfxf4W8",
           "name": "Gmail account"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -164,7 +167,7 @@
       "typeVersion": 1.1,
       "position": [
         1584,
-        416
+        320
       ],
       "id": "464a2360-9939-420e-a99c-b5bc6ec4cf82",
       "name": "[LOG] Tracer Rappel H-2 (Baserow)",
@@ -215,6 +218,55 @@
         912,
         416
       ]
+    },
+    {
+      "parameters": {
+        "authentication": "databaseToken",
+        "operation": "create",
+        "tableId": 1169736,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 10522871,
+              "fieldValue": "ERROR_GMAIL_RELANCE_H2"
+            },
+            {
+              "fieldId": 10524199,
+              "fieldValue": "={{ $workflow.name }}"
+            },
+            {
+              "fieldId": 10522870,
+              "fieldValue": "={{ $now.setZone('Europe/Paris').toFormat(\"yyyy-MM-dd'T'HH:mm:ssZZ\") }}"
+            },
+            {
+              "fieldId": 10522935,
+              "fieldValue": "={{ $('[COND] Filtrer Inscrits à H-2').item.json.Email }}"
+            },
+            {
+              "fieldId": 10523399,
+              "fieldValue": "={{ $('[COND] Filtrer Inscrits à H-2').item.json.ID_Atelier }}"
+            },
+            {
+              "fieldId": 10523412,
+              "fieldValue": "={{ \"Échec envoi mail rappel H-2 : \" + ($json.error.message || \"Erreur API Gmail\") }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        512
+      ],
+      "id": "19ccbb32-ec8d-4183-92ff-2c211dd29516",
+      "name": "[LOG] Tracer Erreur Gmail H-2 (Baserow)",
+      "credentials": {
+        "baserowTokenApi": {
+          "id": "uv5MQZAJKMp096Oc",
+          "name": "Baserow Token account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -235,6 +287,13 @@
         [
           {
             "node": "[LOG] Tracer Rappel H-2 (Baserow)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[LOG] Tracer Erreur Gmail H-2 (Baserow)",
             "type": "main",
             "index": 0
           }
@@ -300,7 +359,7 @@
     "errorWorkflow": "HS1MOpVRiMoZPgNj",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "7f1fcf66-23db-4339-80a9-9b9293dfbbe4",
+  "versionId": "3f64e833-72bc-439c-a877-25df7a86edee",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ed5559f95ef4496093f73e1363d88d14bd5b27bb11aa9024df8122eb9d3a99e2"
