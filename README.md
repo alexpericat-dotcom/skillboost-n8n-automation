@@ -15,16 +15,15 @@ Solution d'automatisation no-code / low-code pour la gestion de bout en bout des
 
 ### 🏗️ Architecture des Workflows n8n
 
-* [**WF-00**](<Workflows/WF-00 _ API Disponibilité Ateliers.json>) : API Disponibilité Ateliers (catalogue en direct)
-* [**WF-01**](<Workflows/WF-01 _ Inscription aux Ateliers SkillsBoost.json>) : Inscription aux Ateliers SkillsBoost
-* [**WF-02**](<Workflows/WF-02 _ Traitement Inscription DB.json>) : Traitement Inscription DB (contrôle d'intégrité & idempotence)
-* [**WF-03**](<Workflows/WF-03 _ Gestion Annulation & Repêchage.json>) : Gestion Annulation & Repêchage (FIFO automatique)
-* [**WF-04A**](<Workflows/WF-04A _ Relances Automatiques J-1.json>) : Relances Automatiques J-1 (CRON matinal & clôture waitlist)
-* [**WF-04B**](<Workflows/WF-04B _ Relances H-2.json>) : Relances H-2 (CRON horaire)
-* [**WF-05A**](<Workflows/WF-05A _ Génération Liste d'Appel [BOT].json>) : Génération Liste d'Appel (Telegram Bot `/appel`)
-* [**WF-05B**](<Workflows/WF-05B _ Clôture Session & Émargement.json>) : Clôture Session & Émargement interactif
-* [**WF-ERR**](<Workflows/WF-ERR _ Gestionnaire d'Erreurs Globales.json>) : Gestionnaire d'Erreurs Globales & Circuit Breaker
-
+* [**WF-00**](Workflows/WF-00%20_%20API%20Disponibilite%20Ateliers.json) : API Disponibilité Ateliers (catalogue en direct)
+* [**WF-01**](Workflows/WF-01%20_%20Inscription%20aux%20Ateliers%20SkillsBoost.json) : Inscription aux Ateliers SkillsBoost
+* [**WF-02**](Workflows/WF-02%20_%20Traitement%20Inscription%20DB.json) : Traitement Inscription DB (contrôle d'intégrité & idempotence)
+* [**WF-03**](Workflows/WF-03%20_%20Gestion%20Annulation%20%26%20Repechage.json) : Gestion Annulation & Repêchage (FIFO automatique)
+* [**WF-04A**](Workflows/WF-04A%20_%20Relances%20Automatiques%20J-1.json) : Relances Automatiques J-1 (CRON matinal & clôture waitlist)
+* [**WF-04B**](Workflows/WF-04B%20_%20Relances%20H-2.json) : Relances H-2 (CRON horaire)
+* [**WF-05A**](Workflows/WF-05A%20_%20G%C3%A9n%C3%A9ration%20Liste%20d'Appel%20%5BBOT%5D.json) : Génération Liste d'Appel (Telegram Bot `/appel`)
+* [**WF-05B**](Workflows/WF-05B%20_%20Cl%C3%B4ture%20Session%20%26%20%C3%89margement.json) : Clôture Session & Émargement interactif
+* [**WF-ERR**](Workflows/WF-ERR%20_%20Gestionnaire%20d'Erreurs%20Globales.json) : Gestionnaire d'Erreurs Globales & Circuit Breaker
 ---
 
 ## 📁 Structure du projet
