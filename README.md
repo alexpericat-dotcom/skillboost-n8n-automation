@@ -21,7 +21,7 @@ Solution d'automatisation no-code / low-code pour la gestion de bout en bout des
 * [**WF-03**](Workflows/WF-03%20_%20Gestion%20Annulation%20%26%20Repechage.json) : Gestion Annulation & Repêchage (FIFO automatique)
 * [**WF-04A**](Workflows/WF-04A%20_%20Relances%20Automatiques%20J-1.json) : Relances Automatiques J-1 (CRON matinal & clôture waitlist)
 * [**WF-04B**](Workflows/WF-04B%20_%20Relances%20H-2.json) : Relances H-2 (CRON horaire)
-* [**WF-05A**](Workflows/WF-05A%20_%20Generation%20Liste%20d'Appel%20BOT.json) : Génération Liste d'Appel (Telegram Bot `/appel`)
+* [**WF-05A**](Workflows/WF-05A%20_%20Generation%20Liste%20d'Appel%20%5BBOT%5D.json) : Génération Liste d'Appel (Telegram Bot `/appel`)
 * [**WF-05B**](Workflows/WF-05B%20_%20Cloture%20Session%20%26%20Emargement.json) : Clôture Session & Émargement interactif
 * [**WF-ERR**](Workflows/WF-ERR%20_%20Gestionnaire%20d'Erreurs%20Globales.json) : Gestionnaire d'Erreurs Globales & Circuit Breaker
 
